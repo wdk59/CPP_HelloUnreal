@@ -72,7 +72,7 @@ protected :
 	// 옛날 방식: 메모리 관리가 제대로 안 될 수 있음 -> 댕글링 포인터 발생 가능
 	//UStaticMeshComponent* MainMesh = nullptr;
 	// 요즘 권장: 댕글링 포인터 처리 등이 자동으로 됨
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TObjectPtr<UStaticMeshComponent> MainMesh = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
