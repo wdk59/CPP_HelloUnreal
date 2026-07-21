@@ -77,5 +77,8 @@ DerivedDataCache/*
 # 라이브 코드 임시 파일?
 enc_temp_folder/*
 
-# 외부 에셋
+# My Ignores
 Content/_ExternalAssets/
+Content/__ExternalActors__/
+Content/__ExternalObjects__/
+
