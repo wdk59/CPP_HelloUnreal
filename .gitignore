@@ -78,4 +78,4 @@ DerivedDataCache/*
 enc_temp_folder/*
 
 # 외부 에셋
-_ExternalAssets/*
+Content/_ExternalAssets/
