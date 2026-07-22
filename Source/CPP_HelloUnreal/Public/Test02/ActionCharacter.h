@@ -64,7 +64,7 @@ protected:
 	float SprintStaminaCostPerSecond = 10.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TWeakObjectPtr<UAnimMontage> RollMontage = nullptr;
+	TObjectPtr<UAnimMontage> RollMontage = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stamina")
 	float RollStaminaCost = 20.f;
