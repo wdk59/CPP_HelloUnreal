@@ -7,6 +7,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Animation/AnimMontage.h"
 
 // Sets default values
 AActionCharacter::AActionCharacter()
@@ -238,7 +239,7 @@ void AActionCharacter::OnSprintEnd()
 
 void AActionCharacter::OnRollAction(const FInputActionValue& Value)
 {
-	if (!RollMontage.IsValid())
+	if (!RollMontage)
 		return;
 
 	if (!AnimInstance)

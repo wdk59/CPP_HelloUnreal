@@ -11,6 +11,7 @@
 class UInputAction;
 class USpringArmComponent;
 class UCameraComponent;
+class UAnimMontage;
 
 UCLASS()
 class CPP_HELLOUNREAL_API AActionCharacter : public ACharacter, public IStaminaInterface
