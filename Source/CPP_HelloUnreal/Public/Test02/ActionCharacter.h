@@ -5,26 +5,22 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "InputActionValue.h"
-#include "../Interface/StaminaInterface.h"
 #include "ActionCharacter.generated.h"
 
 class UInputAction;
 class USpringArmComponent;
 class UCameraComponent;
+class UStatComponent;
 class UAnimMontage;
 
 UCLASS()
-class CPP_HELLOUNREAL_API AActionCharacter : public ACharacter, public IStaminaInterface
+class CPP_HELLOUNREAL_API AActionCharacter : public ACharacter
 {
 	GENERATED_BODY()
 
 public:
 	// Sets default values for this character's properties
 	AActionCharacter();
-
-	virtual float GetCurrentStamina_Implementation() const override;
-	virtual bool ConsumeStamina_Implementation(float InAmount) override;
-	virtual void RecoveryStamina_Implementation(float InAmount) override;
 
 protected:
 	// Called when the game starts or when spawned
@@ -55,59 +51,56 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TObjectPtr<UCameraComponent> CameraComponent = nullptr;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	TObjectPtr<UStatComponent> StatComponent = nullptr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TObjectPtr<UAnimMontage> RollMontage = nullptr;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	float DefaultWalkSpeed = 600.f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	float SprintSpeed = DefaultWalkSpeed * 2;
 
+	// 달리기에 필요한 초당 스태미너 코스트
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stamina")
-	float SprintStaminaCostPerSecond = 10.f;
+	float SprintStaminaCostPerSecond = 2.f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TObjectPtr<UAnimMontage> RollMontage = nullptr;
-
+	// 구르기에 필요한 스태미너 코스트
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stamina")
-	float RollStaminaCost = 20.f;
+	float RollStaminaCost = 30.f;
 
+	// 스태미너 사용 후 자동 회복에 걸리는 시간
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stamina")
-	float CurrentStamina = 100.0f;
+	float StaminaAutoRecoveryCoolTime = 3.f;
 
+	// 스태미너가 자동 회복될 때 타이머 틱 당 회복량
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stamina")
-	float MaxStamina = 100.0f;
+	float StaminaAutoRecoveryPerTick = 1.f;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stamina")
-	float StaminaRecoveryInterval = 0.f;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stamina")
-	bool bIsStaminaRecoveryIntervalWorking = false;
-	
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stamina")
-	bool bIsRecovering = false;
+	// 스태미너가 자동 회복될 때 타이머 한 틱의 시간
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stamina")
-	float StaminaRecoveryDelay = 3.f;
+	float StaminaAutoRecoveryInterval = 0.1f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stamina")
-	float StaminaRecoveryAmountPerSecond = 15.f;
+private:
+	UPROPERTY()
+	TObjectPtr<UAnimInstance> AnimInstance = nullptr;
+
+	bool bSprintMode = false;
 
 protected :
 	void OnTestAction(const FInputActionValue& Value);
 
 	void OnMoveInput(const FInputActionValue& Value);
 
-	// My Code
-	//void OnSprintAction();
-	//void OnStopSprintAction();
-	// Teacher's Code
 	void OnSprintStart();
 	void OnSprintEnd();
 
 	void OnRollAction(const FInputActionValue& Value);
 
-private :
-	UPROPERTY()
-	TObjectPtr<UAnimInstance> AnimInstance = nullptr;
+private:
 
-	bool bIsSprinting = false;
-	bool bSprintSucceed = false;
+	void SpendSprintStamina(float DeltaTime);
+
 };
