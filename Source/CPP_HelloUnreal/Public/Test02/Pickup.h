@@ -34,6 +34,13 @@ protected :
 	TObjectPtr<UStaticMeshComponent> Mesh = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float Stamina = 30.0f;
+	float Amount = 30.0f;
+
+protected :
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void ChangeStat(AActor* OtherActor);
+
+	virtual void ChangeStat_Implementation(AActor* OtherActor);
 
 };

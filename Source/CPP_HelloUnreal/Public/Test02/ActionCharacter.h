@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "../Interface/StatInterface.h"
 #include "InputActionValue.h"
 #include "ActionCharacter.generated.h"
 
@@ -14,13 +15,15 @@ class UStatComponent;
 class UAnimMontage;
 
 UCLASS()
-class CPP_HELLOUNREAL_API AActionCharacter : public ACharacter
+class CPP_HELLOUNREAL_API AActionCharacter : public ACharacter, public IStatInterface
 {
 	GENERATED_BODY()
 
 public:
 	// Sets default values for this character's properties
 	AActionCharacter();
+
+	virtual UStatComponent* GetStatComponent_Implementation() const override;
 
 protected:
 	// Called when the game starts or when spawned

@@ -4,11 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
-#include "StaminaInterface.generated.h"
+#include "StatInterface.generated.h"
+
+class UStatComponent;
 
 // This class does not need to be modified.
 UINTERFACE(MinimalAPI)
-class UStaminaInterface : public UInterface
+class UStatInterface : public UInterface
 {
 	GENERATED_BODY()
 };
@@ -16,7 +18,7 @@ class UStaminaInterface : public UInterface
 /**
  * 
  */
-class CPP_HELLOUNREAL_API IStaminaInterface
+class CPP_HELLOUNREAL_API IStatInterface
 {
 	GENERATED_BODY()
 
@@ -24,15 +26,6 @@ class CPP_HELLOUNREAL_API IStaminaInterface
 public:
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-	float GetCurrentStamina() const;
-
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-	bool ConsumeStamina(float InAmount);
-
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-	void RecoveryStamina(float InAmount);
-
-	// C++ 전용
-	// virtual bool RecoveryStamina(float InAmount) = 0;
+	UStatComponent* GetStatComponent() const;
 
 };

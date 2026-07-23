@@ -4,11 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
-#include "StaminaInterface.generated.h"
+#include "HealthInterface.generated.h"
 
 // This class does not need to be modified.
 UINTERFACE(MinimalAPI)
-class UStaminaInterface : public UInterface
+class UHealthInterface : public UInterface
 {
 	GENERATED_BODY()
 };
@@ -16,7 +16,7 @@ class UStaminaInterface : public UInterface
 /**
  * 
  */
-class CPP_HELLOUNREAL_API IStaminaInterface
+class CPP_HELLOUNREAL_API IHealthInterface
 {
 	GENERATED_BODY()
 
@@ -24,15 +24,12 @@ class CPP_HELLOUNREAL_API IStaminaInterface
 public:
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-	float GetCurrentStamina() const;
+	float GetCurrentHealth() const;
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-	bool ConsumeStamina(float InAmount);
+	bool ReceiveDamage(float InAmount);
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-	void RecoveryStamina(float InAmount);
-
-	// C++ 전용
-	// virtual bool RecoveryStamina(float InAmount) = 0;
+	void RecoveryHealth(float InAmount);
 
 };

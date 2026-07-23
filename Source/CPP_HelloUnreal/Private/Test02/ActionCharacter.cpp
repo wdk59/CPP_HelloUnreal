@@ -28,6 +28,11 @@ AActionCharacter::AActionCharacter()
 
 }
 
+UStatComponent* AActionCharacter::GetStatComponent_Implementation() const
+{
+	return StatComponent;
+}
+
 // Called when the game starts or when spawned
 void AActionCharacter::BeginPlay()
 {

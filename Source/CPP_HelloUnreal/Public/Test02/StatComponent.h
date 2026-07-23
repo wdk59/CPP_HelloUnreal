@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "../Interface/StaminaInterface.h"
+#include "../Interface/HealthInterface.h"
 #include "StatComponent.generated.h"
 
 struct FAutoRecoveryData
@@ -24,7 +25,7 @@ struct FAutoRecoveryData
 };
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class CPP_HELLOUNREAL_API UStatComponent : public UActorComponent, public IStaminaInterface
+class CPP_HELLOUNREAL_API UStatComponent : public UActorComponent, public IStaminaInterface, public IHealthInterface
 {
 	GENERATED_BODY()
 
@@ -37,6 +38,10 @@ public:
 	virtual float GetCurrentStamina_Implementation() const override;
 	virtual bool ConsumeStamina_Implementation(float InAmount) override;
 	virtual void RecoveryStamina_Implementation(float InAmount) override;
+
+	virtual float GetCurrentHealth_Implementation() const override;
+	virtual bool ReceiveDamage_Implementation(float InAmount) override;
+	virtual void RecoveryHealth_Implementation(float InAmount) override;
 
 protected:
 	// Called when the game starts
@@ -51,6 +56,12 @@ protected :
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float MaxStamina = 100.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float CurrentHealth = 100.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float MaxHealth = 100.0f;
 
 private :
 	// 스태미너 자동 회복 처리를 위한 타이머

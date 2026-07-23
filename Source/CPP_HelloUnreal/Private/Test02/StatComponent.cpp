@@ -63,6 +63,32 @@ void UStatComponent::RecoveryStamina_Implementation(float InAmount)
 	}
 }
 
+float UStatComponent::GetCurrentHealth_Implementation() const
+{
+	return CurrentHealth;
+}
+
+bool UStatComponent::ReceiveDamage_Implementation(float InAmount)
+{
+	bool bAlive = true;
+
+	CurrentHealth = FMath::Clamp(CurrentHealth - InAmount, 0, MaxHealth);
+	
+	if (CurrentHealth <= 0)
+	{
+		bAlive = false;
+	}
+
+	UE_LOG(LogTemp, Log, TEXT("Health: %.1f / %.1f"), CurrentHealth, MaxHealth);
+	return bAlive;
+}
+
+void UStatComponent::RecoveryHealth_Implementation(float InAmount)
+{
+	CurrentHealth = FMath::Clamp(CurrentHealth + InAmount, 0, MaxHealth);
+	UE_LOG(LogTemp, Log, TEXT("Health: %.1f / %.1f"), CurrentHealth, MaxHealth);
+}
+
 // Called when the game starts
 void UStatComponent::BeginPlay()
 {
