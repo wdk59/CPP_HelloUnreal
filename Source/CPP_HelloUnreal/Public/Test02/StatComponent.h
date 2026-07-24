@@ -107,7 +107,7 @@ private :
 	// 스태미너 자동 회복용 데이터
 	FAutoRecoveryData StaminaRecoveryData;
 
-	const float EmptyCheckLimit = 0.01f;
+	const float EmptyCheckLimit = 0.02f;
 		
 private :
 	
