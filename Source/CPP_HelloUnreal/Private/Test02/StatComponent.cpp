@@ -50,12 +50,12 @@ bool UStatComponent::ConsumeStamina_Implementation(float InAmount)
 		// 블루프린트 디스패처 Call과 같다.
 		OnStaminaChange.Broadcast(CurrentStamina, MaxStamina);
 
-		if (CurrentStamina < EmptyCheckLimit)
-		{
-			OnStaminaEmpty.Broadcast();
-		}
-
 		bResult = true;
+	}
+
+	if (CurrentStamina < EmptyCheckLimit)
+	{
+		OnStaminaEmpty.Broadcast();
 	}
 
 	UE_LOG(LogTemp, Log, TEXT("Stamina: %.1f / %.1f"), CurrentStamina, MaxStamina);
