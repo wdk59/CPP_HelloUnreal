@@ -25,7 +25,8 @@ class CPP_HELLOUNREAL_API IStatInterface
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
 
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-	UStatComponent* GetStatComponent() const;
+	virtual UStatComponent* GetStatComponent() const = 0;
+	/*UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	UStatComponent* GetStatComponent() const;*/
 
 };

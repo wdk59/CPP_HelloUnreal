@@ -13,7 +13,7 @@ AHealthPickup::AHealthPickup()
 
 void AHealthPickup::ChangeStat_Implementation(AActor* OtherActor)
 {
-	Super::ChangeStat_Implementation(OtherActor);
+	/*Super::ChangeStat_Implementation(OtherActor);
 
 	if (OtherActor && OtherActor->Implements<UStatInterface>())
 	{
@@ -30,5 +30,5 @@ void AHealthPickup::ChangeStat_Implementation(AActor* OtherActor)
 				IHealthInterface::Execute_ReceiveDamage(StatComponent, -Amount);
 			}
 		}
-	}
+	}*/
 }

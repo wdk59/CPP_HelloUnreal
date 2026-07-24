@@ -28,7 +28,7 @@ AActionCharacter::AActionCharacter()
 
 }
 
-UStatComponent* AActionCharacter::GetStatComponent_Implementation() const
+UStatComponent* AActionCharacter::GetStatComponent() const
 {
 	return StatComponent;
 }
