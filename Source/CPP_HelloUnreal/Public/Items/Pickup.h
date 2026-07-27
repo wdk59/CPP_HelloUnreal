@@ -26,7 +26,10 @@ protected:
 
 	virtual void NotifyActorBeginOverlap(AActor* OtherActor) override;
 
-protected :
+	// 오버랩 됬을 때 대상에게 효과를 적용하는 함수
+	virtual void ApplyEffects(AActor* InTarget);
+
+protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TObjectPtr<USphereComponent> SphereCollision;
 
@@ -34,13 +37,9 @@ protected :
 	TObjectPtr<UStaticMeshComponent> Mesh = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float Amount = 30.0f;
+	float Stamina = 0.0f;
 
-protected :
-
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-	void ChangeStat(AActor* OtherActor);
-
-	virtual void ChangeStat_Implementation(AActor* OtherActor);
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float Health = 0.0f;
 
 };

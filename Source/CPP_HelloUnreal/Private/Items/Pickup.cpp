@@ -4,6 +4,10 @@
 #include "Items/Pickup.h"
 #include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "Components/StatComponent.h"
+#include "Interface/StaminaInterface.h"
+#include "Interface/HealthInterface.h"
+#include "Interface/StatInterface.h"
 
 // Sets default values
 APickup::APickup()
@@ -33,12 +37,41 @@ void APickup::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 }
+
 void APickup::NotifyActorBeginOverlap(AActor* OtherActor)
 {
-	ChangeStat(OtherActor);
+	Super::NotifyActorBeginOverlap(OtherActor);
+	ApplyEffects(OtherActor);
+
 }
 
-void APickup::ChangeStat_Implementation(AActor* OtherActor)
+void APickup::ApplyEffects(AActor* InTarget)
 {
+	// bImplements이 true면 인터페이스를 구현했다.
+	// bool bImplements = OtherActor->Implements<UStaminaInterface>()
 
+	if (IStatInterface* Stat = Cast<IStatInterface>(InTarget))
+	{
+		UStatComponent* StatComp = Stat->GetStatComponent();
+		if (Stamina > 0)
+		{
+			IStaminaInterface::Execute_RecoveryStamina(StatComp, Stamina);
+		}
+		else if (Stamina < 0)
+		{
+			IStaminaInterface::Execute_ConsumeStamina(StatComp, -Stamina);
+		}
+
+		if (Health > 0)
+		{
+			IHealthInterface::Execute_RecoveryHealth(StatComp, Health);
+		}
+		else if (Health < 0)
+		{
+			IHealthInterface::Execute_ReceiveDamage(StatComp, -Health);
+		}
+	}
+
+	// Target이 null이 아니면 인터페이스를 상속받았다(= C++니까 구현도 되어 있다. 블루프린트에서 상속을 했을 경우는 체크 불가능)
+	// IStaminaInterface* Target = Cast<IStaminaInterface>(OtherActor);
 }
