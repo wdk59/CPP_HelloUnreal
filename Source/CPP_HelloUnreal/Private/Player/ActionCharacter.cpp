@@ -242,3 +242,24 @@ void AActionCharacter::OnAttackAction(const FInputActionValue& Value)
 		}
 	}
 }
+
+float AActionCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+
+	UE_LOG(LogTemp, Log, TEXT("아야"));
+
+	if (StatComponent && StatComponent->Implements<UHealthInterface>())
+	{
+		if (DamageAmount > 0)
+		{
+			IHealthInterface::Execute_ReceiveDamage(StatComponent, DamageAmount);
+		}
+		else
+		{
+			IHealthInterface::Execute_RecoveryHealth(StatComponent, DamageAmount);
+		}
+	}
+
+	return DamageAmount;
+}

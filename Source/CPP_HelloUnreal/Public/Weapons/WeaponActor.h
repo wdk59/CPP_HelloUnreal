@@ -30,7 +30,7 @@ protected :
 	TObjectPtr<UStaticMeshComponent> Mesh = nullptr;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	FName AttachSocketName = TEXT("SwordSocket");
+	FName AttachSocketName = TEXT("Weapon_R");
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float AttackDamage = 10.f;

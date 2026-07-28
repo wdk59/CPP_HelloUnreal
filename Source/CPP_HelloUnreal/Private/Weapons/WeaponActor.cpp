@@ -83,7 +83,8 @@ void AWeaponActor::OnEquipped(AActor* InOwner)
 
 void AWeaponActor::OnHitAreaBeginOverlap(UPrimitiveComponent* InOverlapComponent, AActor* InOtherActor, UPrimitiveComponent* InOthercomp, int32 InOtherBodyIndex, bool bFromSweep, const FHitResult& InSweepResult)
 {
-	UE_LOG(LogTemp, Log, TEXT("오버랩 된 대상: %s"), *InOtherActor->GetName());
+	UE_LOG(LogTemp, Log, TEXT("가해자: %s"), *OwnerCharacter->GetName());
+	UE_LOG(LogTemp, Log, TEXT("피해자: %s"), *InOtherActor->GetName());
 
 	if (OwnerCharacter.IsValid())
 	{
