@@ -54,6 +54,17 @@ void AActionCharacter::SetSectionJumpNotify(UAnimNotifyState_SectionJump* InSect
 	}*/
 }
 
+bool AActionCharacter::SetNewWeapon(AWeaponActor* InWeapon)
+{
+	if (CurrentWeapon)
+	{
+		return false;
+	}
+
+	CurrentWeapon = InWeapon;
+	return true;
+}
+
 // Called when the game starts or when spawned
 void AActionCharacter::BeginPlay()
 {
@@ -82,6 +93,9 @@ void AActionCharacter::BeginPlay()
 		);
 		StatComponent->InitializeStat(Data);
 	}
+
+	CurrentWeapon = nullptr;
+
 }
 
 // Called every frame

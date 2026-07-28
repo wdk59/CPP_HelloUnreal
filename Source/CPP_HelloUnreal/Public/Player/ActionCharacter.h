@@ -15,6 +15,7 @@ class UCameraComponent;
 class UStatComponent;
 class UAnimMontage;
 class UAnimNotifyState_SectionJump;
+class AWeaponActor;
 
 UCLASS()
 class CPP_HELLOUNREAL_API AActionCharacter : public ACharacter, public IStatInterface, public IWeaponUserInterface
@@ -28,13 +29,15 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Stat")
 	virtual UStatComponent* GetStatComponent() const override;
 	
-	void OnWeaponAttackState(bool bEnable) override;
+	virtual void OnWeaponAttackState(bool bEnable) override;
 
 	void SetSectionJumpNotify(UAnimNotifyState_SectionJump* InSectionJumpNotify);
 
 	virtual FOnWeaponAttackStateChanged& GetWeaponAttackStateChangedDelegate() override {
 		return OnOnWeaponAttackStateChanged;
 	}
+
+	virtual bool SetNewWeapon(AWeaponActor* InWeapon) override;
 
 protected:
 	// Called when the game starts or when spawned
@@ -109,6 +112,10 @@ protected:
 	// 스태미너가 자동 회복될 때 타이머 한 틱의 시간
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat|Stamina")
 	float StaminaAutoRecoveryInterval = 0.1f;
+
+	// 현재 가지고 있는 무기
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
+	TObjectPtr<AWeaponActor> CurrentWeapon = nullptr;
 
 private:
 	UPROPERTY()

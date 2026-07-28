@@ -45,10 +45,10 @@ public :
 	UFUNCTION(BlueprintCallable)
 	void AttackEnable(bool bEnable);
 
-protected :
-
 	UFUNCTION(BlueprintCallable)
 	void OnEquipped(AActor* InOwner);
+
+protected :
 
 	UFUNCTION()
 	void OnHitAreaBeginOverlap(
@@ -57,6 +57,7 @@ protected :
 		UPrimitiveComponent*	InOthercomp,
 		int32					InOtherBodyIndex,
 		bool					bFromSweep,	// 스윕으로 일어나냐 아니냐
-		const FHitResult&		InSweepResult);
+		const FHitResult&		InSweepResult
+	);
 
 };

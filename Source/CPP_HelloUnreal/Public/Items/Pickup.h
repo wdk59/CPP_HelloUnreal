@@ -7,6 +7,7 @@
 #include "Pickup.generated.h"
 
 class USphereComponent;
+class AWeaponActor;
 
 UCLASS()
 class CPP_HELLOUNREAL_API APickup : public AActor
@@ -26,9 +27,6 @@ protected:
 
 	virtual void NotifyActorBeginOverlap(AActor* OtherActor) override;
 
-	// 오버랩 됬을 때 대상에게 효과를 적용하는 함수
-	virtual void ApplyEffects(AActor* InTarget);
-
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TObjectPtr<USphereComponent> SphereCollision;
@@ -41,5 +39,16 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float Health = 0.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TSubclassOf<AWeaponActor> WeaponClass = nullptr;
+
+protected :
+
+	// 오버랩 됐을 때 대상에게 효과를 적용하는 함수
+	virtual void ApplyEffects(AActor* InTarget);
+
+	virtual AWeaponActor* GiveWeapon(AActor* WeaponOwner);
+	
 
 };

@@ -8,6 +8,8 @@
 #include "Interface/StaminaInterface.h"
 #include "Interface/HealthInterface.h"
 #include "Interface/StatInterface.h"
+#include "Interface/WeaponUserInterface.h"
+#include "Weapons/WeaponActor.h"
 
 // Sets default values
 APickup::APickup()
@@ -41,7 +43,20 @@ void APickup::Tick(float DeltaTime)
 void APickup::NotifyActorBeginOverlap(AActor* OtherActor)
 {
 	Super::NotifyActorBeginOverlap(OtherActor);
-	ApplyEffects(OtherActor);
+
+	//ApplyEffects(OtherActor);
+
+	UE_LOG(LogTemp, Log, TEXT("누구쇼"));
+	if (OtherActor->Implements<UWeaponUserInterface>())
+	{
+		UE_LOG(LogTemp, Log, TEXT("장착하소"));
+		IWeaponUserInterface* WeaponUser = Cast<IWeaponUserInterface>(OtherActor);
+		if (AWeaponActor* SpawnedWeapon = GiveWeapon(OtherActor))
+		{
+			UE_LOG(LogTemp, Log, TEXT("만들었소"));
+			WeaponUser->SetNewWeapon(SpawnedWeapon);
+		}
+	}
 
 }
 
@@ -74,4 +89,26 @@ void APickup::ApplyEffects(AActor* InTarget)
 
 	// Target이 null이 아니면 인터페이스를 상속받았다(= C++니까 구현도 되어 있다. 블루프린트에서 상속을 했을 경우는 체크 불가능)
 	// IStaminaInterface* Target = Cast<IStaminaInterface>(OtherActor);
+}
+
+AWeaponActor* APickup::GiveWeapon(AActor* WeaponOwner)
+{
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Owner = WeaponOwner;
+	SpawnParams.Instigator = Cast<APawn>(WeaponOwner);
+
+	if (AWeaponActor* SpawnedWeapon =
+		GetWorld()->SpawnActor<AWeaponActor>(
+			WeaponClass,
+			FVector(0.f, 0.f, 0.f),
+			FRotator(0.f, 0.f, 0.f),
+			SpawnParams
+			)
+		)
+	{
+		SpawnedWeapon->OnEquipped(WeaponOwner);
+		return SpawnedWeapon;
+	}
+	
+	return nullptr;
 }

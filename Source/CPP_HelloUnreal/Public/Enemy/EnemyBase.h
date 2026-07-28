@@ -10,6 +10,7 @@
 
 class UWidgetComponent;
 class UStatComponent;
+class AWeaponActor;
 
 UCLASS()
 class CPP_HELLOUNREAL_API AEnemyBase : public ACharacter, public IStatInterface, public IWeaponUserInterface
@@ -28,6 +29,8 @@ public:
 	virtual FOnWeaponAttackStateChanged& GetWeaponAttackStateChangedDelegate() override {
 		return OnOnWeaponAttackStateChanged;
 	}
+
+	virtual bool SetNewWeapon(AWeaponActor* InWeapon) override;
 
 protected:
 	// Called when the game starts or when spawned
@@ -50,6 +53,10 @@ protected :
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
 	TObjectPtr<UWidgetComponent> HealthBarWidgetComponent = nullptr;
+
+	// 현재 가지고 있는 무기
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Weapon")
+	TObjectPtr<AWeaponActor> CurrentWeapon = nullptr;
 
 protected :
 	
