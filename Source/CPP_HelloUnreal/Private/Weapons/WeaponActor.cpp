@@ -60,6 +60,7 @@ void AWeaponActor::AttackEnable(bool bEnable)
 
 void AWeaponActor::OnEquipped(AActor* InOwner)
 {
+	UE_LOG(LogTemp, Log, TEXT("장착한다이"));
 	SetOwner(InOwner);
 	OwnerCharacter = Cast<ACharacter>(InOwner);
 	FAttachmentTransformRules AttachRules(
@@ -82,6 +83,12 @@ void AWeaponActor::OnEquipped(AActor* InOwner)
 
 void AWeaponActor::OnHitAreaBeginOverlap(UPrimitiveComponent* InOverlapComponent, AActor* InOtherActor, UPrimitiveComponent* InOthercomp, int32 InOtherBodyIndex, bool bFromSweep, const FHitResult& InSweepResult)
 {
-	UE_LOG(LogTemp, Log, TEXT("오버랩 된 대상: %s"), *InOtherActor->GetName())
-	// UGameplayStatics::ApplyDamage()를 호출하면 대상의 TakeDamage 함수가 호출된다.
+	UE_LOG(LogTemp, Log, TEXT("오버랩 된 대상: %s"), *InOtherActor->GetName());
+
+	if (OwnerCharacter.IsValid())
+	{
+		UE_LOG(LogTemp, Log, TEXT("퍽"));
+
+		UGameplayStatics::ApplyDamage(InOtherActor, AttackDamage, OwnerCharacter->GetController(), this, UDamageType::StaticClass());	// 호출하면 대상의 TakeDamage 함수가 호출된다.
+	}
 }

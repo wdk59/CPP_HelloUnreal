@@ -40,6 +40,11 @@ protected :
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
 	TObjectPtr<UWidgetComponent> HealthBarWidgetComponent = nullptr;
 
+protected :
+	
+	UFUNCTION(BlueprintCallable)
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
+
 private :
 	
 	void InitializeStat();
