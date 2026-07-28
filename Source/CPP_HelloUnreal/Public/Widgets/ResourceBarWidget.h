@@ -47,4 +47,8 @@ public :
 	UFUNCTION(BlueprintCallable)
 	void UpdateResourceBar(float InCurrent, float InMax);
 
+	// 내 코드
+	UFUNCTION(BlueprintCallable)
+	void SetResourceBarColor(FLinearColor InColor);
+
 };

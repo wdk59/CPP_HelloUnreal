@@ -10,11 +10,7 @@ void UResourceBarWidget::NativePreConstruct()
 {
 	Super::NativePreConstruct();
 
-	Bar->SetFillColorAndOpacity(FillColor);	// 채워지는 색상 변경
-	
-	FProgressBarStyle Style = Bar->GetWidgetStyle();	// 기존 위젯 스타일을 가져와서
-	Style.BackgroundImage.TintColor = BackgroundColor;	// 수정하고 (배경의 틴트만 변경)
-	Bar->SetWidgetStyle(Style);							// 새로 적용하기
+	SetResourceBarColor(FillColor);
 }
 
 #if WITH_EDITOR
@@ -40,4 +36,18 @@ void UResourceBarWidget::UpdateResourceBar(float InCurrent, float InMax)
 	Bar->SetPercent(InCurrent / InMax);
 	CurrentText->SetText(FText::AsNumber(FMath::FloorToInt(InCurrent)));
 	MaxText->SetText(FText::AsNumber(FMath::FloorToInt(InMax)));
+}
+
+void UResourceBarWidget::SetResourceBarColor(FLinearColor InColor)
+{
+	FillColor = InColor;
+	BackgroundColor = FillColor;
+	BackgroundColor.A = 0.2f;
+
+	Bar->SetFillColorAndOpacity(FillColor);	// 채워지는 색상 변경
+
+	FProgressBarStyle Style = Bar->GetWidgetStyle();	// 기존 위젯 스타일을 가져와서
+	Style.BackgroundImage.TintColor = BackgroundColor;	// 수정하고 (배경의 틴트만 변경)
+	Bar->SetWidgetStyle(Style);							// 새로 적용하기
+
 }
