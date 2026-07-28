@@ -4,8 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
-#include "../Interface/StatInterface.h"
 #include "InputActionValue.h"
+#include "Interface/StatInterface.h"
+#include "Interface/WeaponUserInterface.h"
 #include "ActionCharacter.generated.h"
 
 class UInputAction;
@@ -16,7 +17,7 @@ class UAnimMontage;
 class UAnimNotifyState_SectionJump;
 
 UCLASS()
-class CPP_HELLOUNREAL_API AActionCharacter : public ACharacter, public IStatInterface
+class CPP_HELLOUNREAL_API AActionCharacter : public ACharacter, public IStatInterface, public IWeaponUserInterface
 {
 	GENERATED_BODY()
 
@@ -27,8 +28,14 @@ public:
 	//virtual UStatComponent* GetStatComponent_Implementation() const override;
 	UFUNCTION(BlueprintCallable, Category = "Stat")
 	virtual UStatComponent* GetStatComponent() const override;
+	
+	void OnWeaponAttackState(bool bEnable) override;
 
 	void SetSectionJumpNotify(UAnimNotifyState_SectionJump* InSectionJumpNotify);
+
+	virtual FOnWeaponAttackStateChanged& GetWeaponAttackStateChangedDelegate() override {
+		return OnOnWeaponAttackStateChanged;
+	}
 
 protected:
 	// Called when the game starts or when spawned
@@ -39,6 +46,9 @@ protected:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+public :
+	FOnWeaponAttackStateChanged OnOnWeaponAttackStateChanged;
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)

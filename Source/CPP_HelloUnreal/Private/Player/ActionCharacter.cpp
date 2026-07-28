@@ -34,18 +34,24 @@ UStatComponent* AActionCharacter::GetStatComponent() const
 	return StatComponent;
 }
 
+void AActionCharacter::OnWeaponAttackState(bool bEnable)
+{
+	//OnOnWeaponAttackStateChanged.Execute(bEnable);		// 밑에랑 똑같은 거. 맨손일 때 터질 위험 있어서 아래꺼 사용.
+	OnOnWeaponAttackStateChanged.ExecuteIfBound(bEnable);	// 바인딩 되어 있으면 실행
+}
+
 void AActionCharacter::SetSectionJumpNotify(UAnimNotifyState_SectionJump* InSectionJumpNotify)
 {
 	SectionJumpNotify = InSectionJumpNotify;
 	bComboReady = SectionJumpNotify.IsValid();
-	if (SectionJumpNotify.IsValid())
+	/*if (SectionJumpNotify.IsValid())
 	{
 		UE_LOG(LogTemp, Log, TEXT("점프 가능"));
 	}
 	else
 	{
 		UE_LOG(LogTemp, Log, TEXT("늦었슈"));
-	}
+	}*/
 }
 
 // Called when the game starts or when spawned
@@ -105,7 +111,7 @@ void AActionCharacter::SectionJumpForCombo()
 {
 	if (SectionJumpNotify.IsValid() && bComboReady)
 	{
-		UE_LOG(LogTemp, Log, TEXT("섹션 넘어간다잇"));
+		//UE_LOG(LogTemp, Log, TEXT("섹션 넘어간다잇"));
 		UAnimMontage* CurrentMontage = AnimInstance->GetCurrentActiveMontage();
 		//AnimInstance->Montage_SetNextSection(	// 섹션을 변경한다.
 		//AnimInstance->Montage_GetCurrentSection(CurrentMontage),	// 이 섹션에서 (from)
@@ -116,8 +122,9 @@ void AActionCharacter::SectionJumpForCombo()
 			SectionJumpNotify->GetNextSectionName(),				// 이 섹션으로 변경 (to)
 			CurrentMontage	// 적용할 몽타주
 		);
-		UE_LOG(LogTemp, Log, TEXT("섹션 넘어갔다리"));
+		//UE_LOG(LogTemp, Log, TEXT("섹션 넘어갔다리"));
 
+		OnWeaponAttackState(false);
 		IStaminaInterface::Execute_ConsumeStamina(GetStatComponent(), AttackCost);
 		bComboReady = false;	// 중복 실행 방지
 	}
@@ -225,11 +232,12 @@ void AActionCharacter::OnAttackAction(const FInputActionValue& Value)
 		{
 			// 첫번째 콤보 공격
 			PlayAnimMontage(AttackMontage);
+			OnWeaponAttackState(false);
 			IStaminaInterface::Execute_ConsumeStamina(GetStatComponent(), AttackCost);
 		}
 		else if (AnimInstance->GetCurrentActiveMontage() == AttackMontage)
 		{
-			UE_LOG(LogTemp, Log, TEXT("다음 섹션으로 넘어가쇼"));
+			//UE_LOG(LogTemp, Log, TEXT("다음 섹션으로 넘어가쇼"));
 			SectionJumpForCombo();
 		}
 	}
