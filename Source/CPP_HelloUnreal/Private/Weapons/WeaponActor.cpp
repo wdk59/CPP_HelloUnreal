@@ -34,7 +34,6 @@ AWeaponActor::AWeaponActor()
 	HitArea->SetCollisionResponseToAllChannels(ECR_Ignore);
 	HitArea->SetCollisionResponseToChannel(ECC_Enemy, ECR_Overlap);
 	HitArea->SetRelativeLocation(FVector(0.f, 60.f, 0.f));
-	HitArea->SetRelativeRotation(FRotator(90.f, 0.f, 90.f));
 
 }
 
@@ -62,7 +61,11 @@ void AWeaponActor::AttackEnable(bool bEnable)
 void AWeaponActor::InitializeWeapon(UWeaponDataAsset* InData)
 {
 	WeaponData = InData;
+
 	Mesh->SetStaticMesh(WeaponData->Mesh.Get());	// 전제: 실행 시점에 WeaponData의 로딩 완료. Weapon 스폰 시 SpawnActorDeferred로 보장.
+
+
+
 }
 
 void AWeaponActor::EquipToTarget(AActor* Target)

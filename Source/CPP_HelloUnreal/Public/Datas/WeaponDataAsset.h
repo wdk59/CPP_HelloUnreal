@@ -42,11 +42,8 @@ public :
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "WeaponData")
 	float AttackPower = 10.f;
 
-protected :
-	TSharedPtr<FStreamableHandle> AsyncLoadHandle;
-
 public :
-	void RequestDataLoad(FStreamableDelegate InDelegate);
-	bool IsLoadCompleted() const;
+	TSharedPtr<FStreamableHandle> RequestDataLoad(FStreamableDelegate InDelegate) const;
+	bool IsLoaded() const;
 
 };

@@ -138,6 +138,11 @@ void AActionCharacter::SectionJumpForCombo()
 
 void AActionCharacter::SpawnWeaponActor()
 {
+	if (!CurrentWeaponData)
+	{
+		return;	// 로딩 요청이 끝나기 전에 해제되었을 때를 대비
+	}
+
 	CurrentWeapon = GetWorld()->SpawnActorDeferred<AWeaponActor>(
 		AWeaponActor::StaticClass(), FTransform::Identity, this, this);	// 스폰 시작
 
@@ -145,9 +150,9 @@ void AActionCharacter::SpawnWeaponActor()
 	{
 		CurrentWeapon->InitializeWeapon(CurrentWeaponData);
 		UGameplayStatics::FinishSpawningActor(CurrentWeapon.Get(), FTransform::Identity);	// 스폰 완료 (= BeginPlay까지 실행)
+	
+		CurrentWeapon->EquipToTarget(this);
 	}
-
-	CurrentWeapon->EquipToTarget(this);
 }
 
 // Called to bind functionality to input
@@ -185,13 +190,18 @@ void AActionCharacter::EquipWeapon_Implementation(UWeaponDataAsset* InWeaponData
 	// 새 무기 장착하기
 	CurrentWeaponData = InWeaponData;
 
-	if (!InWeaponData->IsLoadCompleted())
+	if (!InWeaponData->IsLoaded())
 	{
+		UWeaponDataAsset* RequestedData = InWeaponData;
+
 		InWeaponData->RequestDataLoad(
-			FStreamableDelegate::CreateWeakLambda(this, [this]()
+			FStreamableDelegate::CreateWeakLambda(this, [this, RequestedData]()
 				{
 					// 로딩이 완료되면 실행되는 람다 함수
-					SpawnWeaponActor();
+					if (CurrentWeaponData == RequestedData)
+					{
+						SpawnWeaponActor();
+					}
 				})
 		);
 	}
