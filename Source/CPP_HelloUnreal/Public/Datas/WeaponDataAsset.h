@@ -36,7 +36,7 @@ public :
 
 	// HitArea 캡슐의 반지름
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "HitArea")
-	float HitAreaRadius = 30.f;
+	float HitAreaRadius = 15.f;
 
 	// 무기의 공격력
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "WeaponData")

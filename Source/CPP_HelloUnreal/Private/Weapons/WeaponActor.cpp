@@ -27,13 +27,13 @@ AWeaponActor::AWeaponActor()
 
 	HitArea = CreateDefaultSubobject<UCapsuleComponent>(TEXT("HitArea"));
 	HitArea->SetupAttachment(Mesh);
-	HitArea->SetCapsuleHalfHeight(50.f, false);
+	HitArea->SetCapsuleHalfHeight(60.f, false);
 	HitArea->SetCapsuleRadius(15.f, false);
 	HitArea->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	HitArea->SetCollisionObjectType(ECC_Weapon);
 	HitArea->SetCollisionResponseToAllChannels(ECR_Ignore);
 	HitArea->SetCollisionResponseToChannel(ECC_Enemy, ECR_Overlap);
-	HitArea->SetRelativeLocation(FVector(0.f, 60.f, 0.f));
+	HitArea->SetRelativeLocation(FVector(0.f, 0.f, 60.f));
 
 }
 
