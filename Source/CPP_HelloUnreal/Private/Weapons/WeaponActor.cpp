@@ -85,6 +85,9 @@ void AWeaponActor::DropWeapon()
 	Mesh->SetSimulatePhysics(true);
 	HitArea->SetCollisionEnabled(ECollisionEnabled::NoCollision);	// 물리 작용 중에 HitArea로 인한 충돌 방지
 
+	// 연출
+	Mesh->AddImpulse(ThrowPower * Mesh->GetMass() * FVector::UpVector);
+
 }
 
 void AWeaponActor::OnEquipped(AActor* InOwner)

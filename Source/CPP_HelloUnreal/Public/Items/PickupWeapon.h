@@ -19,7 +19,7 @@ protected :
 
 	virtual void OnConstruction(const FTransform& Transform) override;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TObjectPtr<UWeaponDataAsset> WeaponData;
 
 protected :

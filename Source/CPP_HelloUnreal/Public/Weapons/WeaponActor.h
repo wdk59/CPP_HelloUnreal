@@ -32,6 +32,9 @@ protected :
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	TObjectPtr<UWeaponDataAsset> WeaponData;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float ThrowPower = 700.f;
+
 private :
 
 	// 무기를 장비하고 있는 대상
