@@ -64,7 +64,9 @@ void AWeaponActor::InitializeWeapon(UWeaponDataAsset* InData)
 
 	Mesh->SetStaticMesh(WeaponData->Mesh.Get());	// 전제: 실행 시점에 WeaponData의 로딩 완료. Weapon 스폰 시 SpawnActorDeferred로 보장.
 
-
+	HitArea->SetCapsuleHalfHeight(WeaponData->HitAreaHeight, false);
+	HitArea->SetCapsuleRadius(WeaponData->HitAreaRadius, false);
+	HitArea->SetRelativeLocation(WeaponData->LocationOffset);
 
 }
 
@@ -99,7 +101,7 @@ void AWeaponActor::OnEquipped(AActor* InOwner)
 
 	if (OwnerCharacter.IsValid())
 	{
-		AttachToComponent(OwnerCharacter->GetMesh(), AttachRules, AttachSocketName);
+		AttachToComponent(OwnerCharacter->GetMesh(), AttachRules, WeaponData->AttachSocketName);
 		HitArea->IgnoreActorWhenMoving(OwnerCharacter.Get(), true);	// 이미 OwnerCharacter와의 충돌은 무시되지만, 만약을 대비한 것
 
 		IWeaponUserInterface* WeaponUser = Cast<IWeaponUserInterface>(OwnerCharacter);
@@ -120,6 +122,6 @@ void AWeaponActor::OnHitAreaBeginOverlap(UPrimitiveComponent* InOverlapComponent
 	{
 		UE_LOG(LogTemp, Log, TEXT("퍽"));
 
-		UGameplayStatics::ApplyDamage(InOtherActor, AttackPower, OwnerCharacter->GetController(), this, nullptr);	// 호출하면 대상의 TakeDamage 함수가 호출된다.
+		UGameplayStatics::ApplyDamage(InOtherActor, WeaponData->AttackPower, OwnerCharacter->GetController(), this, nullptr);	// 호출하면 대상의 TakeDamage 함수가 호출된다.
 	}
 }

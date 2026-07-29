@@ -29,13 +29,6 @@ protected :
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TObjectPtr<UStaticMeshComponent> Mesh = nullptr;
 
-	// delete: AttachSocketName, AttackPower
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	FName AttachSocketName = TEXT("Weapon_R");
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float AttackPower = 10.f;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	TObjectPtr<UWeaponDataAsset> WeaponData;
 
