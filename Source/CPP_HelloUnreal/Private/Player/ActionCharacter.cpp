@@ -9,6 +9,9 @@
 #include "Components/StatComponent.h"
 #include "Animation/AnimMontage.h"
 #include "AnimNotify/AnimNotifyState_SectionJump.h"
+#include "Datas/WeaponDataAsset.h"
+#include "Weapons/WeaponActor.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 AActionCharacter::AActionCharacter()
@@ -52,17 +55,6 @@ void AActionCharacter::SetSectionJumpNotify(UAnimNotifyState_SectionJump* InSect
 	{
 		UE_LOG(LogTemp, Log, TEXT("늦었슈"));
 	}*/
-}
-
-bool AActionCharacter::SetNewWeapon(AWeaponActor* InWeapon)
-{
-	if (CurrentWeapon)
-	{
-		return false;
-	}
-
-	CurrentWeapon = InWeapon;
-	return true;
 }
 
 // Called when the game starts or when spawned
@@ -144,6 +136,20 @@ void AActionCharacter::SectionJumpForCombo()
 	}
 }
 
+void AActionCharacter::SpawnWeaponActor()
+{
+	CurrentWeapon = GetWorld()->SpawnActorDeferred<AWeaponActor>(
+		AWeaponActor::StaticClass(), FTransform::Identity, this, this);	// 스폰 시작
+
+	if (CurrentWeapon.IsValid())
+	{
+		CurrentWeapon->InitializeWeapon(CurrentWeaponData);
+		UGameplayStatics::FinishSpawningActor(CurrentWeapon.Get(), FTransform::Identity);	// 스폰 완료 (= BeginPlay까지 실행)
+	}
+
+	CurrentWeapon->EquipToTarget(this);
+}
+
 // Called to bind functionality to input
 void AActionCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
@@ -165,6 +171,34 @@ void AActionCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		EnhancedInputComponent->BindAction(IA_Attack, ETriggerEvent::Started, this, &AActionCharacter::OnAttackAction);
 	}
 
+}
+
+void AActionCharacter::EquipWeapon_Implementation(UWeaponDataAsset* InWeaponData)
+{
+	// 이전 무기 해제하기
+	if (CurrentWeapon.IsValid())
+	{
+		CurrentWeapon->DropWeapon();
+		CurrentWeapon = nullptr;
+	}
+
+	// 새 무기 장착하기
+	CurrentWeaponData = InWeaponData;
+
+	if (!InWeaponData->IsLoadCompleted())
+	{
+		InWeaponData->RequestDataLoad(
+			FStreamableDelegate::CreateWeakLambda(this, [this]()
+				{
+					// 로딩이 완료되면 실행되는 람다 함수
+					SpawnWeaponActor();
+				})
+		);
+	}
+	else
+	{
+		SpawnWeaponActor();
+	}
 }
 
 void AActionCharacter::OnTestAction(const FInputActionValue& Value)
@@ -259,21 +293,27 @@ void AActionCharacter::OnAttackAction(const FInputActionValue& Value)
 
 float AActionCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
-	Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+	float Damage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 
-	UE_LOG(LogTemp, Log, TEXT("아야"));
-
-	if (StatComponent && StatComponent->Implements<UHealthInterface>())
+	if (UStatComponent* StatComp = GetStatComponent())
 	{
-		if (DamageAmount > 0)
+		IHealthInterface::Execute_ReceiveDamage(StatComp, Damage);
+		UE_LOG(LogTemp, Log, TEXT("아야 (데미지: %.1f, 공격자: %s)"), Damage, *EventInstigator->GetName());
+
+		// 내 코드
+		/*if (StatComp->Implements<UHealthInterface>())
 		{
-			IHealthInterface::Execute_ReceiveDamage(StatComponent, DamageAmount);
-		}
-		else
-		{
-			IHealthInterface::Execute_RecoveryHealth(StatComponent, DamageAmount);
-		}
+
+			if (DamageAmount > 0)
+			{
+				IHealthInterface::Execute_ReceiveDamage(StatComp, DamageAmount);
+			}
+			else
+			{
+				IHealthInterface::Execute_RecoveryHealth(StatComp, DamageAmount);
+			}
+		}*/
 	}
 
-	return DamageAmount;
+	return Damage;
 }

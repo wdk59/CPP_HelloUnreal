@@ -34,17 +34,6 @@ void AEnemyBase::OnWeaponAttackState(bool bEnable)
 	OnOnWeaponAttackStateChanged.ExecuteIfBound(bEnable);
 }
 
-bool AEnemyBase::SetNewWeapon(AWeaponActor* InWeapon)
-{
-	if (CurrentWeapon)
-	{
-		return false;
-	}
-
-	CurrentWeapon = InWeapon;
-	return true;
-}
-
 // Called when the game starts or when spawned
 void AEnemyBase::BeginPlay()
 {

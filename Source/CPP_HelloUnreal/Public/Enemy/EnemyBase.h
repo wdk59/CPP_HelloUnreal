@@ -30,8 +30,6 @@ public:
 		return OnOnWeaponAttackStateChanged;
 	}
 
-	virtual bool SetNewWeapon(AWeaponActor* InWeapon) override;
-
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

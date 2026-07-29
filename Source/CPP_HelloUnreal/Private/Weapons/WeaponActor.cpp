@@ -6,7 +6,8 @@
 #include "GameFramework/Character.h"
 #include "CPP_HelloUnreal/CPP_HelloUnreal.h"
 #include "Interface/WeaponUserInterface.h"
-#include "Kismet/GameplayStatics.h"
+#include "Kismet/GameplayStatics.h"	// Kismet: 언리얼3 때 쓰던 건데 아직 유지 중
+#include "Datas/WeaponDataAsset.h"
 
 // Sets default values
 AWeaponActor::AWeaponActor()
@@ -58,6 +59,29 @@ void AWeaponActor::AttackEnable(bool bEnable)
 	}
 }
 
+void AWeaponActor::InitializeWeapon(UWeaponDataAsset* InData)
+{
+	WeaponData = InData;
+	Mesh->SetStaticMesh(WeaponData->Mesh.Get());	// 전제: 실행 시점에 WeaponData의 로딩 완료. Weapon 스폰 시 SpawnActorDeferred로 보장.
+}
+
+void AWeaponActor::EquipToTarget(AActor* Target)
+{
+	OnEquipped(Target);
+}
+
+void AWeaponActor::DropWeapon()
+{
+	FDetachmentTransformRules DetachRules(EDetachmentRule::KeepWorld, true);	// 현재 월드 상태를 유지하고, 부모 갱신한다는 규칙
+	DetachFromActor(DetachRules);	// 규칙 적용해서 현재 부모에게서 떼어냄
+	
+	Mesh->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
+	Mesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
+	Mesh->SetSimulatePhysics(true);
+	HitArea->SetCollisionEnabled(ECollisionEnabled::NoCollision);	// 물리 작용 중에 HitArea로 인한 충돌 방지
+
+}
+
 void AWeaponActor::OnEquipped(AActor* InOwner)
 {
 	UE_LOG(LogTemp, Log, TEXT("장착한다이"));
@@ -74,9 +98,12 @@ void AWeaponActor::OnEquipped(AActor* InOwner)
 	{
 		AttachToComponent(OwnerCharacter->GetMesh(), AttachRules, AttachSocketName);
 		HitArea->IgnoreActorWhenMoving(OwnerCharacter.Get(), true);	// 이미 OwnerCharacter와의 충돌은 무시되지만, 만약을 대비한 것
-	
+
 		IWeaponUserInterface* WeaponUser = Cast<IWeaponUserInterface>(OwnerCharacter);
-		WeaponUser->GetWeaponAttackStateChangedDelegate().BindUFunction(this, FName("AttackEnable"));
+		if (WeaponUser)
+		{
+			WeaponUser->GetWeaponAttackStateChangedDelegate().BindUFunction(this, FName("AttackEnable"));
+		}
 	}
 
 }
@@ -90,6 +117,6 @@ void AWeaponActor::OnHitAreaBeginOverlap(UPrimitiveComponent* InOverlapComponent
 	{
 		UE_LOG(LogTemp, Log, TEXT("퍽"));
 
-		UGameplayStatics::ApplyDamage(InOtherActor, AttackDamage, OwnerCharacter->GetController(), this, UDamageType::StaticClass());	// 호출하면 대상의 TakeDamage 함수가 호출된다.
+		UGameplayStatics::ApplyDamage(InOtherActor, AttackPower, OwnerCharacter->GetController(), this, nullptr);	// 호출하면 대상의 TakeDamage 함수가 호출된다.
 	}
 }

@@ -16,6 +16,7 @@ class UStatComponent;
 class UAnimMontage;
 class UAnimNotifyState_SectionJump;
 class AWeaponActor;
+class UWeaponDataAsset;
 
 UCLASS()
 class CPP_HELLOUNREAL_API AActionCharacter : public ACharacter, public IStatInterface, public IWeaponUserInterface
@@ -36,8 +37,6 @@ public:
 	virtual FOnWeaponAttackStateChanged& GetWeaponAttackStateChangedDelegate() override {
 		return OnOnWeaponAttackStateChanged;
 	}
-
-	virtual bool SetNewWeapon(AWeaponActor* InWeapon) override;
 
 protected:
 	// Called when the game starts or when spawned
@@ -114,8 +113,16 @@ protected:
 	float StaminaAutoRecoveryInterval = 0.1f;
 
 	// 현재 가지고 있는 무기
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
-	TObjectPtr<AWeaponActor> CurrentWeapon = nullptr;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item")
+	TWeakObjectPtr<AWeaponActor> CurrentWeapon = nullptr;
+
+	// 현재 장비할 무기의 데이터 에셋 (임시: 추후 무기 관리자로 이전 예정)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item")
+	TObjectPtr<UWeaponDataAsset> CurrentWeaponData = nullptr;
+
+public :
+	// 무기 장비 함수들
+	virtual void EquipWeapon_Implementation(UWeaponDataAsset* InWeaponData) override;
 
 private:
 	UPROPERTY()
@@ -128,6 +135,11 @@ private:
 	
 	// 현재 콤보가 가능한지 확인하기 위한 변수
 	bool bComboReady = false;
+
+public :
+
+	void SpawnWeaponActor();
+
 
 protected :
 	void OnTestAction(const FInputActionValue& Value);

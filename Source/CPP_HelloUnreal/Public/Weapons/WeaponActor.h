@@ -29,11 +29,15 @@ protected :
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TObjectPtr<UStaticMeshComponent> Mesh = nullptr;
 
+	// delete: AttachSocketName, AttackPower
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	FName AttachSocketName = TEXT("Weapon_R");
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float AttackDamage = 10.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float AttackPower = 10.f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	TObjectPtr<UWeaponDataAsset> WeaponData;
 
 private :
 
@@ -46,9 +50,18 @@ public :
 	void AttackEnable(bool bEnable);
 
 	UFUNCTION(BlueprintCallable)
-	void OnEquipped(AActor* InOwner);
+	void InitializeWeapon(UWeaponDataAsset* InData);
+
+	UFUNCTION(BlueprintCallable)
+	void EquipToTarget(AActor* Target);
+
+	UFUNCTION(BlueprintCallable)
+	void DropWeapon();
 
 protected :
+
+	UFUNCTION(BlueprintCallable)
+	void OnEquipped(AActor* InOwner);
 
 	UFUNCTION()
 	void OnHitAreaBeginOverlap(
