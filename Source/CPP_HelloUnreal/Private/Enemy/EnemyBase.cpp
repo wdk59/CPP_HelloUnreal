@@ -40,8 +40,6 @@ void AEnemyBase::BeginPlay()
 	Super::BeginPlay();
 
 	InitializeStat();
-
-	OnWeaponAttackState(true);
 	
 }
 

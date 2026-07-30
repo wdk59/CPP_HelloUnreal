@@ -8,6 +8,7 @@
 
 class USphereComponent;
 class AWeaponActor;
+class UNiagaraComponent;
 
 UCLASS()
 class CPP_HELLOUNREAL_API APickupBase : public AActor
@@ -29,15 +30,54 @@ protected:
 
 protected:
 
+	// 메시의 기본 위치
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Base Data");
+	FVector MeshBaseLocation = FVector(0.f, 0.f, 50.f);
+
+	// 맵에 있을 때 위아래로 왕복하는 모습용 커브
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Effect|Default")
+	TObjectPtr<UCurveFloat> UpDownCurve;
+
+	// 맵에 있을 때 회전하는 모습용 커브
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Effect|Default")
+	TObjectPtr<UCurveFloat> SpinCurve;
+
+	// 위아래로 왕복하는데 걸리는 시간
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Effect|Default")
+	float UpDownDuration = 2.f;
+
+	// 위아래로 움직이는 거리
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Effect|Default")
+	float UpDownHeight = 100.f;
+
+protected:
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TObjectPtr<USphereComponent> SphereCollision;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TObjectPtr<UStaticMeshComponent> Mesh = nullptr;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	TObjectPtr<UNiagaraComponent> NiagaraComponent;
+
+private :
+
+	float ElapsedTime = 0.f;
+
+	bool bIdle = true;
+
 protected:
 
 	// 오버랩 됐을 때 대상에게 효과를 적용하는 함수
 	virtual void OnPickup(AActor* InTarget);
+
+	virtual void OnUpdateUpdownSpin(float InDeltaTime);
+
+	inline void StopIdle() { bIdle = false; }
+
+private :
+
+	bool IsCurveAssetReady() const;
 
 };

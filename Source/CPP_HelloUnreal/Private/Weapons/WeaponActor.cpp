@@ -29,7 +29,7 @@ AWeaponActor::AWeaponActor()
 	HitArea->SetupAttachment(Mesh);
 	HitArea->SetCapsuleHalfHeight(60.f, false);
 	HitArea->SetCapsuleRadius(15.f, false);
-	HitArea->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	HitArea->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	HitArea->SetCollisionObjectType(ECC_Weapon);
 	HitArea->SetCollisionResponseToAllChannels(ECR_Ignore);
 	HitArea->SetCollisionResponseToChannel(ECC_Enemy, ECR_Overlap);
@@ -43,7 +43,7 @@ void AWeaponActor::BeginPlay()
 	Super::BeginPlay();
 
 	HitArea->OnComponentBeginOverlap.AddDynamic(this, &AWeaponActor::OnHitAreaBeginOverlap);
-	
+
 }
 
 void AWeaponActor::AttackEnable(bool bEnable)
@@ -60,13 +60,17 @@ void AWeaponActor::AttackEnable(bool bEnable)
 
 void AWeaponActor::InitializeWeapon(UWeaponDataAsset* InData)
 {
+	if (!InData)	return;
+
 	WeaponData = InData;
 
+	// 메시 설정 및 위치 조정
 	Mesh->SetStaticMesh(WeaponData->Mesh.Get());	// 전제: 실행 시점에 WeaponData의 로딩 완료. Weapon 스폰 시 SpawnActorDeferred로 보장.
+	//Mesh->SetRelativeLocation(WeaponData->LocationOffset);
 
+	//HitArea 크기 조정
 	HitArea->SetCapsuleHalfHeight(WeaponData->HitAreaHeight, false);
 	HitArea->SetCapsuleRadius(WeaponData->HitAreaRadius, false);
-	HitArea->SetRelativeLocation(WeaponData->LocationOffset);
 
 }
 
@@ -82,17 +86,51 @@ void AWeaponActor::DropWeapon()
 	
 	Mesh->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
 	Mesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
+	Mesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Ignore);
+	Mesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
+	Mesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Player, ECollisionResponse::ECR_Ignore);
 	Mesh->SetSimulatePhysics(true);
 	HitArea->SetCollisionEnabled(ECollisionEnabled::NoCollision);	// 물리 작용 중에 HitArea로 인한 충돌 방지
 
-	// 연출
-	Mesh->AddImpulse(ThrowPower * Mesh->GetMass() * FVector::UpVector);
+	// 일정 시간동안 무기와 플레이어가 충돌 안 하게 설정
+	FTimerManager& TimerManager = GetWorld()->GetTimerManager();
+	TimerManager.SetTimer(
+		PhysicsDelayTimerHandle,
+		FTimerDelegate::CreateLambda(
+			[this]()
+			{
+				Mesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Player, ECollisionResponse::ECR_Block);
+			}
+		),
+		PhysicsDelay,
+		false
+	);
+
+	// 던지기 연출
+	FVector BackwardDirection = -OwnerCharacter->GetActorForwardVector();
+	FVector ThrowDirection = BackwardDirection * ThrowPower + FVector::UpVector * 200.f;
+
+	Mesh->AddImpulse(ThrowDirection, NAME_None, true);
+
+	FVector AngularImpulse = FVector(
+		FMath::RandRange(-200.f, 200.f)
+	) + GetActorForwardVector() * ThrowPower;
+	Mesh->AddAngularImpulseInDegrees(AngularImpulse, NAME_None, true);
+
+	SetLifeSpan(DropLifeSpan);
+
+	OwnerCharacter = nullptr;
 
 }
 
 void AWeaponActor::OnEquipped(AActor* InOwner)
 {
-	UE_LOG(LogTemp, Log, TEXT("장착한다이"));
+	if (!WeaponData)
+	{
+		return;
+	}
+
+	//UE_LOG(LogTemp, Log, TEXT("장착한다이"));
 	SetOwner(InOwner);
 	OwnerCharacter = Cast<ACharacter>(InOwner);
 	FAttachmentTransformRules AttachRules(
@@ -105,6 +143,10 @@ void AWeaponActor::OnEquipped(AActor* InOwner)
 	if (OwnerCharacter.IsValid())
 	{
 		AttachToComponent(OwnerCharacter->GetMesh(), AttachRules, WeaponData->AttachSocketName);
+	
+		// 오프셋 적용
+		SetActorRelativeLocation(WeaponData->LocationOffset);
+		
 		HitArea->IgnoreActorWhenMoving(OwnerCharacter.Get(), true);	// 이미 OwnerCharacter와의 충돌은 무시되지만, 만약을 대비한 것
 
 		IWeaponUserInterface* WeaponUser = Cast<IWeaponUserInterface>(OwnerCharacter);
@@ -118,6 +160,13 @@ void AWeaponActor::OnEquipped(AActor* InOwner)
 
 void AWeaponActor::OnHitAreaBeginOverlap(UPrimitiveComponent* InOverlapComponent, AActor* InOtherActor, UPrimitiveComponent* InOthercomp, int32 InOtherBodyIndex, bool bFromSweep, const FHitResult& InSweepResult)
 {
+	float Damage = WeaponData ? WeaponData->AttackPower : 1;
+
+	if (!WeaponData)
+	{
+		return;
+	}
+
 	UE_LOG(LogTemp, Log, TEXT("가해자: %s"), *OwnerCharacter->GetName());
 	UE_LOG(LogTemp, Log, TEXT("피해자: %s"), *InOtherActor->GetName());
 
@@ -125,6 +174,6 @@ void AWeaponActor::OnHitAreaBeginOverlap(UPrimitiveComponent* InOverlapComponent
 	{
 		UE_LOG(LogTemp, Log, TEXT("퍽"));
 
-		UGameplayStatics::ApplyDamage(InOtherActor, WeaponData->AttackPower, OwnerCharacter->GetController(), this, nullptr);	// 호출하면 대상의 TakeDamage 함수가 호출된다.
+		UGameplayStatics::ApplyDamage(InOtherActor, Damage, OwnerCharacter->GetController(), this, nullptr);	// 호출하면 대상의 TakeDamage 함수가 호출된다.
 	}
 }
