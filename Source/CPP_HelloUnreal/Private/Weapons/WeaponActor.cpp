@@ -8,6 +8,7 @@
 #include "Interface/WeaponUserInterface.h"
 #include "Kismet/GameplayStatics.h"	// Kismet: 언리얼3 때 쓰던 건데 아직 유지 중
 #include "Datas/WeaponDataAsset.h"
+#include "Interface/StatInterface.h"
 
 // Sets default values
 AWeaponActor::AWeaponActor()
@@ -72,6 +73,8 @@ void AWeaponActor::InitializeWeapon(UWeaponDataAsset* InData)
 	HitArea->SetCapsuleHalfHeight(WeaponData->HitAreaHeight, false);
 	HitArea->SetCapsuleRadius(WeaponData->HitAreaRadius, false);
 
+	CurrentDurability = WeaponData->MaxDurability;
+
 }
 
 void AWeaponActor::EquipToTarget(AActor* Target)
@@ -123,6 +126,11 @@ void AWeaponActor::DropWeapon()
 
 }
 
+void AWeaponActor::SetToDefaultWeapon()
+{
+	bHasDurability = false;
+}
+
 void AWeaponActor::OnEquipped(AActor* InOwner)
 {
 	if (!WeaponData)
@@ -162,7 +170,7 @@ void AWeaponActor::OnHitAreaBeginOverlap(UPrimitiveComponent* InOverlapComponent
 {
 	float Damage = WeaponData ? WeaponData->AttackPower : 1;
 
-	if (!WeaponData)
+	if (!WeaponData || WeaponData->MaxDurability <= 0)
 	{
 		return;
 	}
@@ -175,5 +183,15 @@ void AWeaponActor::OnHitAreaBeginOverlap(UPrimitiveComponent* InOverlapComponent
 		UE_LOG(LogTemp, Log, TEXT("퍽"));
 
 		UGameplayStatics::ApplyDamage(InOtherActor, Damage, OwnerCharacter->GetController(), this, nullptr);	// 호출하면 대상의 TakeDamage 함수가 호출된다.
+	
+		if (bHasDurability && InOtherActor->Implements<UStatInterface>())
+		{
+			CurrentDurability--;
+			UE_LOG(LogTemp, Log, TEXT("무기 내구도: %d / %d"), CurrentDurability, WeaponData->MaxDurability);
+			if (CurrentDurability <= 0)
+			{
+				IWeaponUserInterface::Execute_EquipDefaultWeapon(OwnerCharacter.Get());
+			}
+		}
 	}
 }

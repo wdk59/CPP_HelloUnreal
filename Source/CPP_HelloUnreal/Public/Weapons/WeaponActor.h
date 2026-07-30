@@ -47,6 +47,12 @@ protected :
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float DropLifeSpan = 10.f;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	bool bHasDurability = true;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	int32 CurrentDurability = 0.f;
+
 private :
 
 	// 무기를 장비하고 있는 대상
@@ -68,6 +74,9 @@ public :
 
 	UFUNCTION(BlueprintCallable)
 	void DropWeapon();
+
+	UFUNCTION(BlueprintCallable)
+	void SetToDefaultWeapon();
 
 protected :
 

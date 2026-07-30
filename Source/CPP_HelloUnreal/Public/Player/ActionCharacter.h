@@ -112,17 +112,29 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat|Stamina")
 	float StaminaAutoRecoveryInterval = 0.1f;
 
+	// 기본 무기
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item|Weapon")
+	TObjectPtr<AWeaponActor> DefaultWeapon = nullptr;
+
+	// 기본 장비할 무기의 데이터 에셋 (임시: 추후 무기 관리자로 이전 예정)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item|Weapon")
+	TObjectPtr<UWeaponDataAsset> DefaultWeaponData = nullptr;
+
 	// 현재 가지고 있는 무기
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item|Weapon")
 	TWeakObjectPtr<AWeaponActor> CurrentWeapon = nullptr;
 
 	// 현재 장비할 무기의 데이터 에셋 (임시: 추후 무기 관리자로 이전 예정)
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item|Weapon")
 	TObjectPtr<UWeaponDataAsset> CurrentWeaponData = nullptr;
 
 public :
-	// 무기 장비 함수들
+	void LoadWeaponData(UWeaponDataAsset* InWeaponData);
+	// 무기 장비 관련 함수들
 	virtual void EquipWeapon_Implementation(UWeaponDataAsset* InWeaponData) override;
+	virtual void UnequipWeapon_Implementation() override;
+	virtual void EquipDefaultWeapon_Implementation() override;
+
 
 private:
 	UPROPERTY()
@@ -156,6 +168,11 @@ protected :
 	UFUNCTION(BlueprintCallable)
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
+	UFUNCTION(BlueprintCallable)
+	void ActiveDefaultWeapon();
+	
+	UFUNCTION(BlueprintCallable)
+	void DeactiveDefaultWeapon();
 
 private:
 

@@ -88,6 +88,8 @@ void AActionCharacter::BeginPlay()
 
 	CurrentWeapon = nullptr;
 
+	IWeaponUserInterface::Execute_EquipWeapon(this, DefaultWeaponData);
+
 }
 
 // Called every frame
@@ -142,16 +144,23 @@ void AActionCharacter::SpawnWeaponActor()
 	{
 		return;	// 로딩 요청이 끝나기 전에 해제되었을 때를 대비
 	}
-
+	UE_LOG(LogTemp, Log, TEXT("무기 만들쟈이"));
 	CurrentWeapon = GetWorld()->SpawnActorDeferred<AWeaponActor>(
 		AWeaponActor::StaticClass(), FTransform::Identity, this, this);	// 스폰 시작
 
 	if (CurrentWeapon.IsValid())
 	{
+		UE_LOG(LogTemp, Log, TEXT("무기 만들었다이"));
 		CurrentWeapon->InitializeWeapon(CurrentWeaponData);
 		UGameplayStatics::FinishSpawningActor(CurrentWeapon.Get(), FTransform::Identity);	// 스폰 완료 (= BeginPlay까지 실행)
 	
 		CurrentWeapon->EquipToTarget(this);
+
+		if (CurrentWeaponData == DefaultWeaponData)
+		{
+			DefaultWeapon = CurrentWeapon.Get();
+			DefaultWeapon->SetToDefaultWeapon();
+		}
 	}
 }
 
@@ -178,28 +187,25 @@ void AActionCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 
 }
 
-void AActionCharacter::EquipWeapon_Implementation(UWeaponDataAsset* InWeaponData)
+void AActionCharacter::LoadWeaponData(UWeaponDataAsset* RequestedData)
 {
-	// 이전 무기 해제하기
-	if (CurrentWeapon.IsValid())
+	if (!IsValid(RequestedData))
 	{
-		CurrentWeapon->DropWeapon();
-		CurrentWeapon = nullptr;
+		UE_LOG(LogTemp, Error, TEXT("failed LoadWeaponData: Invalid RequestedData"));
+		return;
 	}
 
-	// 새 무기 장착하기
-	CurrentWeaponData = InWeaponData;
-
-	if (!InWeaponData->IsLoaded())
+	UE_LOG(LogTemp, Log, TEXT("무기 데이터 로드!"));
+	if (!RequestedData->IsLoaded())
 	{
-		UWeaponDataAsset* RequestedData = InWeaponData;
-
-		InWeaponData->RequestDataLoad(
+		UE_LOG(LogTemp, Log, TEXT("새로 로드!"));
+		RequestedData->RequestDataLoad(
 			FStreamableDelegate::CreateWeakLambda(this, [this, RequestedData]()
 				{
 					// 로딩이 완료되면 실행되는 람다 함수
 					if (CurrentWeaponData == RequestedData)
 					{
+						UE_LOG(LogTemp, Log, TEXT("로드 끝, 스폰!"));
 						SpawnWeaponActor();
 					}
 				})
@@ -207,8 +213,56 @@ void AActionCharacter::EquipWeapon_Implementation(UWeaponDataAsset* InWeaponData
 	}
 	else
 	{
+		UE_LOG(LogTemp, Log, TEXT("바로 스폰!"));
 		SpawnWeaponActor();
 	}
+}
+
+void AActionCharacter::EquipWeapon_Implementation(UWeaponDataAsset* InWeaponData)
+{
+	if (!IsValid(InWeaponData))
+	{
+		UE_LOG(LogTemp, Error, TEXT("failed EqupWeapon: Invalid InWeaponData"));
+		return;
+	}
+
+	// 이전 무기 해제하기
+	IWeaponUserInterface::Execute_UnequipWeapon(this);
+
+	// 새 무기 장착하기
+	CurrentWeaponData = InWeaponData;
+	LoadWeaponData(InWeaponData);
+}
+
+void AActionCharacter::UnequipWeapon_Implementation()
+{
+	if (CurrentWeapon.IsValid())
+	{
+		if (CurrentWeapon == DefaultWeapon)
+		{
+			// 기본 무기 비활성화
+			DeactiveDefaultWeapon();
+		}
+		else
+		{
+			// 이전 무기 Destroy
+			CurrentWeapon->DropWeapon();
+			CurrentWeapon = nullptr;
+			CurrentWeaponData = DefaultWeaponData;
+		}
+	}
+}
+
+void AActionCharacter::EquipDefaultWeapon_Implementation()
+{
+	if (CurrentWeaponData && CurrentWeaponData != DefaultWeaponData)
+	{
+		// 이전 무기 해제하기
+		IWeaponUserInterface::Execute_UnequipWeapon(this);
+	}
+
+	// 기본 무기 활성화
+	ActiveDefaultWeapon();
 }
 
 void AActionCharacter::OnTestAction(const FInputActionValue& Value)
@@ -326,4 +380,34 @@ float AActionCharacter::TakeDamage(float DamageAmount, FDamageEvent const& Damag
 	}
 
 	return Damage;
+}
+
+void AActionCharacter::ActiveDefaultWeapon()
+{
+	if (!IsValid(DefaultWeapon))
+	{
+		UE_LOG(LogTemp, Error, TEXT("failed ActiveDefaultWeapon: Invalid DefaultWeapon"));
+		CurrentWeapon = nullptr;
+		return;
+	}
+
+	CurrentWeapon = DefaultWeapon;
+	CurrentWeapon->SetActorHiddenInGame(false);
+	CurrentWeapon->SetActorEnableCollision(true);
+	CurrentWeapon->SetActorTickEnabled(true);
+}
+
+void AActionCharacter::DeactiveDefaultWeapon()
+{
+	if (!IsValid(DefaultWeapon))
+	{
+		UE_LOG(LogTemp, Error, TEXT("failed ActiveDefaultWeapon: Invalid DefaultWeapon"));
+		CurrentWeapon = nullptr;
+		return;
+	}
+
+	CurrentWeapon->SetActorHiddenInGame(true);
+	CurrentWeapon->SetActorEnableCollision(false);
+	CurrentWeapon->SetActorTickEnabled(false);
+	CurrentWeapon = nullptr;
 }
