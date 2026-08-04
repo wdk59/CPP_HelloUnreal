@@ -16,9 +16,6 @@ class CPP_HELLOUNREAL_API UAnimNotifyState_AttackEnable : public UAnimNotifyStat
 {
 	GENERATED_BODY()
 
-private:
-	IWeaponUserInterface* WeaponOwner = nullptr;
-
 protected:
 	virtual void NotifyBegin(
 		USkeletalMeshComponent* MeshComp,

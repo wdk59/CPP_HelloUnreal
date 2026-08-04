@@ -32,6 +32,7 @@ float UStatComponent::GetMaxStamina_Implementation() const
 bool UStatComponent::ConsumeStamina_Implementation(float InAmount)
 {
 	bool bResult = false;
+	InAmount = FMath::Max(InAmount, 0.f);	// 음수는 0으로 처리
 
 	if (CurrentStamina >= InAmount)
 	{
@@ -50,20 +51,22 @@ bool UStatComponent::ConsumeStamina_Implementation(float InAmount)
 		// 블루프린트 디스패처 Call과 같다.
 		OnStaminaChange.Broadcast(CurrentStamina, MaxStamina);
 
+		if (CurrentStamina < EmptyCheckLimit)
+		{
+			OnStaminaEmpty.Broadcast();
+		}
+
 		bResult = true;
+		UE_LOG(LogTemp, Log, TEXT("Stamina: %.1f / %.1f"), CurrentStamina, MaxStamina);
 	}
 
-	if (CurrentStamina < EmptyCheckLimit)
-	{
-		OnStaminaEmpty.Broadcast();
-	}
-
-	UE_LOG(LogTemp, Log, TEXT("Stamina: %.1f / %.1f"), CurrentStamina, MaxStamina);
 	return bResult;
 }
 
 void UStatComponent::RecoveryStamina_Implementation(float InAmount)
 {
+	InAmount = FMath::Max(InAmount, 0.f);	// 음수는 0으로 처리
+
 	CurrentStamina = FMath::Min(CurrentStamina + InAmount, MaxStamina);
 	OnStaminaChange.Broadcast(CurrentStamina, MaxStamina);
 	
@@ -90,14 +93,14 @@ float UStatComponent::GetMaxHealth_Implementation() const
 
 void UStatComponent::ReceiveDamage_Implementation(float InAmount)
 {
+	InAmount = FMath::Max(InAmount, 0.f);	// 음수는 0으로 처리
 
-	CurrentHealth = FMath::Max(CurrentHealth - InAmount, 0);
-	//CurrentHealth -= InAmount;
-	OnHealthChange.Broadcast(CurrentHealth, MaxHealth);
+	CurrentHealth -= InAmount;
 
 	if (CurrentHealth <= 0.f)
 	{
 		CurrentHealth = 0;
+		OnHealthChange.Broadcast(CurrentHealth, MaxHealth);
 		OnDie.Broadcast();
 	}
 
@@ -107,6 +110,8 @@ void UStatComponent::ReceiveDamage_Implementation(float InAmount)
 
 void UStatComponent::RecoveryHealth_Implementation(float InAmount)
 {
+	InAmount = FMath::Max(InAmount, 0.f);	// 음수는 0으로 처리
+
 	CurrentHealth = FMath::Min(CurrentHealth + InAmount, MaxHealth);
 	OnHealthChange.Broadcast(CurrentHealth, MaxHealth);
 	//UE_LOG(LogTemp, Log, TEXT("Health: %.1f / %.1f"), CurrentHealth, MaxHealth);
@@ -118,6 +123,7 @@ void UStatComponent::BeginPlay()
 	Super::BeginPlay();
 
 	CurrentStamina = MaxStamina;
+	CurrentHealth = MaxHealth;
 	
 }
 

@@ -6,9 +6,7 @@
 #include "UObject/Interface.h"
 #include "WeaponUserInterface.generated.h"
 
-class UWeaponDataAsset;
-
-DECLARE_DYNAMIC_DELEGATE_OneParam(FOnWeaponAttackStateChanged, bool, bEnable);
+class UWeaponComponent;
 
 // This class does not need to be modified.
 UINTERFACE(MinimalAPI)
@@ -27,16 +25,12 @@ class CPP_HELLOUNREAL_API IWeaponUserInterface
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
 
-	virtual void OnWeaponAttackState(bool bEnable) = 0;
-	virtual FOnWeaponAttackStateChanged& GetWeaponAttackStateChangedDelegate() = 0;
+	virtual UWeaponComponent* GetWeaponComponent() const = 0;
+
+	//virtual void OnWeaponAttackState(bool bEnable) = 0;
+	//virtual FOnWeaponAttackStateChanged& GetWeaponAttackStateChangedDelegate() = 0;
 	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void EquipWeapon(UWeaponDataAsset* InWeaponData);
-
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-	void UnequipWeapon();
-
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-	void EquipDefaultWeapon();
 
 };

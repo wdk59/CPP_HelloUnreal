@@ -7,7 +7,6 @@
 #include "PickupBase.generated.h"
 
 class USphereComponent;
-class AWeaponActor;
 class UNiagaraComponent;
 
 UCLASS()
@@ -73,8 +72,6 @@ protected:
 	virtual void OnPickup(AActor* InTarget);
 
 	virtual void OnUpdateUpdownSpin(float InDeltaTime);
-
-	inline void StopIdle() { bIdle = false; }
 
 private :
 

@@ -28,10 +28,9 @@ UStatComponent* AEnemyBase::GetStatComponent() const
 	return StatComponent;
 }
 
-void AEnemyBase::OnWeaponAttackState(bool bEnable)
+UWeaponComponent* AEnemyBase::GetWeaponComponent() const
 {
-	UE_LOG(LogTemp, Log, TEXT("공격 상태 변경"));
-	OnOnWeaponAttackStateChanged.ExecuteIfBound(bEnable);
+	return WeaponComponent;
 }
 
 // Called when the game starts or when spawned

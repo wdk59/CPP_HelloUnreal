@@ -2,13 +2,16 @@
 
 
 #include "Weapons/WeaponActor.h"
+#include "Interface/WeaponUserInterface.h"
+#include "Datas/WeaponDataAsset.h"
+
+#include "CPP_HelloUnreal/CPP_HelloUnreal.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/Character.h"
-#include "CPP_HelloUnreal/CPP_HelloUnreal.h"
-#include "Interface/WeaponUserInterface.h"
 #include "Kismet/GameplayStatics.h"	// Kismet: 언리얼3 때 쓰던 건데 아직 유지 중
-#include "Datas/WeaponDataAsset.h"
-#include "Interface/StatInterface.h"
+#include "NiagaraComponent.h"
+
+#include "Components/WeaponComponent.h"
 
 // Sets default values
 AWeaponActor::AWeaponActor()
@@ -36,6 +39,9 @@ AWeaponActor::AWeaponActor()
 	HitArea->SetCollisionResponseToChannel(ECC_Enemy, ECR_Overlap);
 	HitArea->SetRelativeLocation(FVector(0.f, 0.f, 60.f));
 
+	TrailVFX = CreateDefaultSubobject<UNiagaraComponent>(TEXT("TraiVFX"));
+	TrailVFX->SetupAttachment(Mesh);
+
 }
 
 // Called when the game starts or when spawned
@@ -45,6 +51,8 @@ void AWeaponActor::BeginPlay()
 
 	HitArea->OnComponentBeginOverlap.AddDynamic(this, &AWeaponActor::OnHitAreaBeginOverlap);
 
+	TrailVFX->Deactivate();
+
 }
 
 void AWeaponActor::AttackEnable(bool bEnable)
@@ -52,10 +60,12 @@ void AWeaponActor::AttackEnable(bool bEnable)
 	if (bEnable)
 	{
 		HitArea->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+		TrailVFX->Activate();
 	}
 	else
 	{
 		HitArea->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		TrailVFX->Deactivate();
 	}
 }
 
@@ -65,16 +75,25 @@ void AWeaponActor::InitializeWeapon(UWeaponDataAsset* InData)
 
 	WeaponData = InData;
 
-	// 메시 설정 및 위치 조정
-	Mesh->SetStaticMesh(WeaponData->Mesh.Get());	// 전제: 실행 시점에 WeaponData의 로딩 완료. Weapon 스폰 시 SpawnActorDeferred로 보장.
-	//Mesh->SetRelativeLocation(WeaponData->LocationOffset);
+	/* 에셋 설정 */
 
-	//HitArea 크기 조정
-	HitArea->SetCapsuleHalfHeight(WeaponData->HitAreaHeight, false);
-	HitArea->SetCapsuleRadius(WeaponData->HitAreaRadius, false);
+	if (WeaponData->IsLoaded())	// 로딩이 완료되었을 때만 처리
+	{
+		// 메시 설정 및 위치 조정
+		Mesh->SetStaticMesh(WeaponData->Mesh.Get());	// 전제: 실행 시점에 WeaponData의 로딩 완료. Weapon 스폰 시 SpawnActorDeferred로 보장.
+		//Mesh->SetRelativeLocation(WeaponData->LocationOffset);
 
-	CurrentDurability = WeaponData->MaxDurability;
+		// 나이아가라 설정
+		TrailVFX->SetAsset(WeaponData->TrailVFX.Get());
 
+		//HitArea 크기 조정
+		HitArea->SetCapsuleHalfHeight(WeaponData->HitAreaHalfHeight, false);
+		HitArea->SetCapsuleRadius(WeaponData->HitAreaRadius, false);
+
+		// 사용 횟수 설정
+		CurrentUseCount = WeaponData->UseCount;
+		UE_LOG(LogTemp, Log, TEXT("Current Use Count: %d"), CurrentUseCount);
+	}
 }
 
 void AWeaponActor::EquipToTarget(AActor* Target)
@@ -84,11 +103,20 @@ void AWeaponActor::EquipToTarget(AActor* Target)
 
 void AWeaponActor::DropWeapon()
 {
+	if (IWeaponUserInterface* WeaponUser = Cast<IWeaponUserInterface>(OwnerCharacter))
+	{
+		if (UWeaponComponent* WeaponComp = WeaponUser->GetWeaponComponent())
+		{
+			WeaponComp->OnWeaponAttackStateChanged.Clear();
+		}
+	}
+
 	FDetachmentTransformRules DetachRules(EDetachmentRule::KeepWorld, true);	// 현재 월드 상태를 유지하고, 부모 갱신한다는 규칙
 	DetachFromActor(DetachRules);	// 규칙 적용해서 현재 부모에게서 떼어냄
-	
-	Mesh->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
-	Mesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
+
+	//Mesh->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
+	//Mesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
+	Mesh->SetCollisionProfileName(TEXT("PhysicsActor"));
 	Mesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Ignore);
 	Mesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 	Mesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Player, ECollisionResponse::ECR_Ignore);
@@ -99,7 +127,8 @@ void AWeaponActor::DropWeapon()
 	FTimerManager& TimerManager = GetWorld()->GetTimerManager();
 	TimerManager.SetTimer(
 		PhysicsDelayTimerHandle,
-		FTimerDelegate::CreateLambda(
+		FTimerDelegate::CreateWeakLambda(
+			this,
 			[this]()
 			{
 				Mesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Player, ECollisionResponse::ECR_Block);
@@ -109,8 +138,13 @@ void AWeaponActor::DropWeapon()
 		false
 	);
 
-	// 던지기 연출
-	FVector BackwardDirection = -OwnerCharacter->GetActorForwardVector();
+	// 뒤로 던지기
+	FVector BackwardDirection = FVector::BackwardVector;
+	if (OwnerCharacter.IsValid())
+	{
+		BackwardDirection = -OwnerCharacter->GetActorForwardVector();
+	}
+
 	FVector ThrowDirection = BackwardDirection * ThrowPower + FVector::UpVector * 200.f;
 
 	Mesh->AddImpulse(ThrowDirection, NAME_None, true);
@@ -120,15 +154,37 @@ void AWeaponActor::DropWeapon()
 	) + GetActorForwardVector() * ThrowPower;
 	Mesh->AddAngularImpulseInDegrees(AngularImpulse, NAME_None, true);
 
+	// DropLifeSpan초 후에 무기 액터 제거
 	SetLifeSpan(DropLifeSpan);
 
+	OnWeaponDrop.Unbind();
 	OwnerCharacter = nullptr;
 
 }
 
-void AWeaponActor::SetToDefaultWeapon()
+void AWeaponActor::Use()
 {
-	bHasDurability = false;
+	if (WeaponData && !WeaponData->bInfinityUse)
+	{
+		CurrentUseCount--;
+		UE_LOG(LogTemp, Log, TEXT("Current Use Count: %d"), CurrentUseCount);
+
+		if (CurrentUseCount <= 0)
+		{
+			OnWeaponDrop.ExecuteIfBound(WeaponData);
+		}
+	}
+}
+
+void AWeaponActor::ResetUseCount()
+{
+	CurrentUseCount = WeaponData->UseCount;
+	UE_LOG(LogTemp, Log, TEXT("Current Use Count: %d"), CurrentUseCount);
+}
+
+FVector AWeaponActor::GetWeaponImpactLocation() const
+{
+	return FMath::Lerp(Mesh->GetSocketLocation(TEXT("Tip")), Mesh->GetSocketLocation(TEXT("Base")), 0.5f);
 }
 
 void AWeaponActor::OnEquipped(AActor* InOwner)
@@ -160,7 +216,10 @@ void AWeaponActor::OnEquipped(AActor* InOwner)
 		IWeaponUserInterface* WeaponUser = Cast<IWeaponUserInterface>(OwnerCharacter);
 		if (WeaponUser)
 		{
-			WeaponUser->GetWeaponAttackStateChangedDelegate().BindUFunction(this, FName("AttackEnable"));
+			if (UWeaponComponent* WeaponComp = WeaponUser->GetWeaponComponent())
+			{
+				WeaponComp->OnWeaponAttackStateChanged.BindUFunction(this, FName("AttackEnable"));
+			}
 		}
 	}
 
@@ -168,30 +227,13 @@ void AWeaponActor::OnEquipped(AActor* InOwner)
 
 void AWeaponActor::OnHitAreaBeginOverlap(UPrimitiveComponent* InOverlapComponent, AActor* InOtherActor, UPrimitiveComponent* InOthercomp, int32 InOtherBodyIndex, bool bFromSweep, const FHitResult& InSweepResult)
 {
-	float Damage = WeaponData ? WeaponData->AttackPower : 1;
-
-	if (!WeaponData || WeaponData->MaxDurability <= 0)
-	{
+	if (!OwnerCharacter.IsValid() || !InOtherActor)
 		return;
-	}
+
+	float Damage = WeaponData ? WeaponData->AttackPower : 1;
 
 	UE_LOG(LogTemp, Log, TEXT("가해자: %s"), *OwnerCharacter->GetName());
 	UE_LOG(LogTemp, Log, TEXT("피해자: %s"), *InOtherActor->GetName());
 
-	if (OwnerCharacter.IsValid())
-	{
-		UE_LOG(LogTemp, Log, TEXT("퍽"));
-
-		UGameplayStatics::ApplyDamage(InOtherActor, Damage, OwnerCharacter->GetController(), this, nullptr);	// 호출하면 대상의 TakeDamage 함수가 호출된다.
-	
-		if (bHasDurability && InOtherActor->Implements<UStatInterface>())
-		{
-			CurrentDurability--;
-			UE_LOG(LogTemp, Log, TEXT("무기 내구도: %d / %d"), CurrentDurability, WeaponData->MaxDurability);
-			if (CurrentDurability <= 0)
-			{
-				IWeaponUserInterface::Execute_EquipDefaultWeapon(OwnerCharacter.Get());
-			}
-		}
-	}
+	UGameplayStatics::ApplyDamage(InOtherActor, Damage, OwnerCharacter->GetController(), this, nullptr);	// 호출하면 대상의 TakeDamage 함수가 호출된다.
 }

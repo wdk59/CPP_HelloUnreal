@@ -27,7 +27,7 @@ protected :
 
 	// 이 픽업을 먹었을 때 획득하는 무기 데이터
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Base Data")
-	TObjectPtr<UWeaponDataAsset> WeaponData;
+	TObjectPtr<UWeaponDataAsset> WeaponData = nullptr;
 
 	// 아이템을 줍는 연출의 진행 상황용 커브
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Effect|Pickup")
@@ -69,6 +69,8 @@ protected :
 	
 	virtual void OnUpdatePickupEffect();
 	virtual void OnFinishPickupEffect();
+
+private :
 	
 	virtual bool IsPickupEffectAssetReady() const;
 

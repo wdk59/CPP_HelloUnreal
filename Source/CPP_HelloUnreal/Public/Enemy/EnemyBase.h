@@ -24,11 +24,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Stat")
 	virtual UStatComponent* GetStatComponent() const override;
 
-	virtual void OnWeaponAttackState(bool Enable) override;
-
-	virtual FOnWeaponAttackStateChanged& GetWeaponAttackStateChangedDelegate() override {
-		return OnOnWeaponAttackStateChanged;
-	}
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	virtual UWeaponComponent* GetWeaponComponent() const override;
 
 protected:
 	// Called when the game starts or when spawned
@@ -40,14 +37,13 @@ protected:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-public :
-	
-	FOnWeaponAttackStateChanged OnOnWeaponAttackStateChanged;
-
 protected :
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
 	TObjectPtr<UStatComponent> StatComponent = nullptr;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	TObjectPtr<UWeaponComponent> WeaponComponent = nullptr;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
 	TObjectPtr<UWidgetComponent> HealthBarWidgetComponent = nullptr;

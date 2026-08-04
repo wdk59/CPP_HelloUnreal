@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
 #include "Engine/StreamableManager.h"
+#include "NiagaraSystem.h"	// TSoftObjectPtr로 선언하기 때문에 헤더 필요
 #include "WeaponDataAsset.generated.h"
 
 class UStaticMesh;
@@ -23,6 +24,9 @@ public :
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Appearance")
 	TSoftObjectPtr<UStaticMesh> Mesh;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Appearance")
+	TSoftObjectPtr<UNiagaraSystem> TrailVFX;
+
 	// 무기가 Attache될 소켓
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "HitArea")
 	FName AttachSocketName = TEXT("Weapon_R");
@@ -32,18 +36,38 @@ public :
 
 	// HitArea 캡슐의 높이 절반
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "HitArea")
-	float HitAreaHeight = 60.f;
+	float HitAreaHalfHeight = 60.f;
 
 	// HitArea 캡슐의 반지름
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "HitArea")
 	float HitAreaRadius = 15.f;
+
+	// 무기 사용 횟수
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "WeaponData")
+	int32 UseCount = 10;
+
+	// 무한 사용 가능 여부
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "WeaponData")
+	bool bInfinityUse = false;
 
 	// 무기의 공격력
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "WeaponData")
 	float AttackPower = 10.f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "WeaponData")
-	int32 MaxDurability = 2;
+	float AreaAttackPower = 10.f;
+
+	// 무기의 범위 공격의 반지름 (안쪽, 이 안쪽은 데미지 100%)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "WeaponData")
+	float AreaAttackInnerRadius = 100.f;
+
+	// 무기의 범위 공격의 반지름 (바깥쪽, Inner ~ Outter 범위는 거리에 다라 감소)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "WeaponData")
+	float AreaAttackOuterRadius = 300.f;
+
+	// 무기의 공격 애니메이션 몽타주
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WeaponData")
+	TObjectPtr<UAnimMontage> AttackMontage;
 
 public :
 	TSharedPtr<FStreamableHandle> RequestDataLoad(FStreamableDelegate InDelegate) const;

@@ -8,6 +8,7 @@ TSharedPtr<FStreamableHandle> UWeaponDataAsset::RequestDataLoad(FStreamableDeleg
 {
 	TArray<FSoftObjectPath> TargetsToLoad;
 	TargetsToLoad.Add(Mesh.ToSoftObjectPath());
+	TargetsToLoad.Add(TrailVFX.ToSoftObjectPath());
 
 	FStreamableManager& Streamable = UAssetManager::GetStreamableManager();
 	

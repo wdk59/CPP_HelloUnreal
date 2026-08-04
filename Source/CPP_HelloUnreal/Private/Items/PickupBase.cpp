@@ -53,7 +53,7 @@ void APickupBase::NotifyActorBeginOverlap(AActor* OtherActor)
 
 void APickupBase::OnPickup(AActor* InTarget)
 {
-	UE_LOG(LogTemp, Log, TEXT("%s가 %s을 획득했습니다."), *InTarget->GetName(), *GetName());
+	UE_LOG(LogTemp, Log, TEXT("%s가 %s을 획득했습니다."), InTarget ? *InTarget->GetName() : TEXT("알 수 없는 대상"), *this->GetName());
 	bIdle = false;
 }
 
@@ -63,7 +63,8 @@ void APickupBase::OnUpdateUpdownSpin(float InDeltaTime)
 
 	ElapsedTime += InDeltaTime;
 
-	float Progress = FMath::Fmod(ElapsedTime / UpDownDuration, 1.f);
+	float Div = FMath::Max(UpDownDuration, 0.001f);
+	float Progress = FMath::Fmod(ElapsedTime / Div, 1.f);
 	FVector NewMeshLocation = MeshBaseLocation;
 	NewMeshLocation.Z += UpDownCurve->GetFloatValue(Progress) * UpDownHeight;
 

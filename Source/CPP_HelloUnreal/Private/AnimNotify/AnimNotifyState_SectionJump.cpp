@@ -8,20 +8,23 @@ void UAnimNotifyState_SectionJump::NotifyBegin(USkeletalMeshComponent* MeshComp,
 {
 	Super::NotifyBegin(MeshComp, Animation, TotalDuration, EventReference);
 
-	OwnerCharacter = Cast<AActionCharacter>(MeshComp->GetOwner());
-	if (OwnerCharacter.IsValid())
+	if (IWeaponUserInterface* WeaponOwner = Cast<IWeaponUserInterface>(MeshComp->GetOwner()))
 	{
-		OwnerCharacter->SetSectionJumpNotify(this);
+		if (UWeaponComponent* WeaponComp = WeaponOwner->GetWeaponComponent())
+		{
+			WeaponComp->SetSectionJumpNotify(this);
+		}
 	}
-
 }
 
 void UAnimNotifyState_SectionJump::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference)
 {
-	if (OwnerCharacter.IsValid())
+	if (IWeaponUserInterface* WeaponOwner = Cast<IWeaponUserInterface>(MeshComp->GetOwner()))
 	{
-		OwnerCharacter->SetSectionJumpNotify(nullptr);
-		OwnerCharacter = nullptr;
+		if (UWeaponComponent* WeaponComp = WeaponOwner->GetWeaponComponent())
+		{
+			WeaponComp->SetSectionJumpNotify(nullptr);
+		}
 	}
 
 	Super::NotifyEnd(MeshComp, Animation, EventReference);

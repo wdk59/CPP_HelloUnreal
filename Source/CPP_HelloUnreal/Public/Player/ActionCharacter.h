@@ -13,9 +13,8 @@ class UInputAction;
 class USpringArmComponent;
 class UCameraComponent;
 class UStatComponent;
-class UAnimMontage;
+class UWeaponComponent;
 class UAnimNotifyState_SectionJump;
-class AWeaponActor;
 class UWeaponDataAsset;
 
 UCLASS()
@@ -29,14 +28,14 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Stat")
 	virtual UStatComponent* GetStatComponent() const override;
-	
-	virtual void OnWeaponAttackState(bool bEnable) override;
 
-	void SetSectionJumpNotify(UAnimNotifyState_SectionJump* InSectionJumpNotify);
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	virtual UWeaponComponent* GetWeaponComponent() const override;
 
-	virtual FOnWeaponAttackStateChanged& GetWeaponAttackStateChangedDelegate() override {
-		return OnOnWeaponAttackStateChanged;
-	}
+	// WeaponComponent로 전달할 함수들 ----------------------------------------------------------
+	// 무기 장비 관련 함수들
+	virtual void EquipWeapon_Implementation(UWeaponDataAsset* InWeaponData) override;
+	// ------------------------------------------------------------------------------------------
 
 protected:
 	// Called when the game starts or when spawned
@@ -48,8 +47,8 @@ protected:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-public :
-	FOnWeaponAttackStateChanged OnOnWeaponAttackStateChanged;
+	UFUNCTION(BlueprintCallable)
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
@@ -76,11 +75,11 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TObjectPtr<UStatComponent> StatComponent = nullptr;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TObjectPtr<UAnimMontage> RollMontage = nullptr;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	TObjectPtr<UWeaponComponent> WeaponComponent = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TObjectPtr<UAnimMontage> AttackMontage = nullptr;
+	TObjectPtr<UAnimMontage> RollMontage = nullptr;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Move")
 	float DefaultWalkSpeed = 600.f;
@@ -112,45 +111,13 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat|Stamina")
 	float StaminaAutoRecoveryInterval = 0.1f;
 
-	// 기본 무기
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item|Weapon")
-	TObjectPtr<AWeaponActor> DefaultWeapon = nullptr;
-
-	// 기본 장비할 무기의 데이터 에셋 (임시: 추후 무기 관리자로 이전 예정)
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item|Weapon")
-	TObjectPtr<UWeaponDataAsset> DefaultWeaponData = nullptr;
-
-	// 현재 가지고 있는 무기
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item|Weapon")
-	TWeakObjectPtr<AWeaponActor> CurrentWeapon = nullptr;
-
-	// 현재 장비할 무기의 데이터 에셋 (임시: 추후 무기 관리자로 이전 예정)
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item|Weapon")
-	TObjectPtr<UWeaponDataAsset> CurrentWeaponData = nullptr;
-
-public :
-	void LoadWeaponData(UWeaponDataAsset* InWeaponData);
-	// 무기 장비 관련 함수들
-	virtual void EquipWeapon_Implementation(UWeaponDataAsset* InWeaponData) override;
-	virtual void UnequipWeapon_Implementation() override;
-	virtual void EquipDefaultWeapon_Implementation() override;
-
-
 private:
 	UPROPERTY()
 	TObjectPtr<UAnimInstance> AnimInstance = nullptr;
 
 	bool bSprintMode = false;
 
-	// 발생한 콤보 노티파이를 저장해 놓는 변수
-	TWeakObjectPtr<UAnimNotifyState_SectionJump> SectionJumpNotify = nullptr;
-	
-	// 현재 콤보가 가능한지 확인하기 위한 변수
-	bool bComboReady = false;
-
 public :
-
-	void SpawnWeaponActor();
 
 
 protected :
@@ -165,19 +132,8 @@ protected :
 
 	void OnAttackAction(const FInputActionValue& Value);
 
-	UFUNCTION(BlueprintCallable)
-	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
-
-	UFUNCTION(BlueprintCallable)
-	void ActiveDefaultWeapon();
-	
-	UFUNCTION(BlueprintCallable)
-	void DeactiveDefaultWeapon();
-
 private:
 
 	void SpendSprintStamina(float DeltaTime);
-
-	void SectionJumpForCombo();	// 콤보용으로 섹션 점프하는 함수
 
 };
