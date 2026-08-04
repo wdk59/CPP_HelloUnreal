@@ -4,19 +4,28 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Interface/PoolableInterface.h"
 #include "DamagePopupActor.generated.h"
 
 class UWidgetComponent;
 class UDamagePopupWidget;
 
 UCLASS()
-class CPP_HELLOUNREAL_API ADamagePopupActor : public AActor
+class CPP_HELLOUNREAL_API ADamagePopupActor : public AActor, public IPoolableInterface
 {
 	GENERATED_BODY()
 	
 public:	
 	// Sets default values for this actor's properties
 	ADamagePopupActor();
+
+	UFUNCTION(BlueprintCallable)
+	virtual void UseFinish() override;
+
+	virtual void OnSpawn_Implementation() override;
+	
+	virtual void OnReturn_Implementation() override;
+
 
 protected:
 	// Called when the game starts or when spawned
@@ -29,6 +38,9 @@ protected :
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TObjectPtr<UWidgetComponent> DamagePopupWidgetComponent;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	float LifeTime = 1.5f;
 
 private :
 

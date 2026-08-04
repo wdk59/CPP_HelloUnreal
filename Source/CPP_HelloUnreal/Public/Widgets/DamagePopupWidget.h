@@ -8,6 +8,8 @@
 
 class UTextBlock;
 
+DECLARE_DELEGATE(FOnPopUpAnimationFinished);
+
 /**
  * 
  */
@@ -16,6 +18,10 @@ class CPP_HELLOUNREAL_API UDamagePopupWidget : public UUserWidget
 {
 	GENERATED_BODY()
 
+protected :
+
+	virtual void OnAnimationFinished_Implementation(const UWidgetAnimation* Animation) override;
+
 public :
 
 	UFUNCTION(BlueprintCallable)
@@ -23,6 +29,10 @@ public :
 
 	UFUNCTION(BlueprintCallable)
 	void PlayPopupAnimation();
+
+public :
+
+	FOnPopUpAnimationFinished OnPopUpAnimationFinished;
 
 protected :
 
@@ -33,6 +43,4 @@ protected :
 	UPROPERTY(Transient, BlueprintReadOnly, meta = (BindWidgetAnim))
 	TObjectPtr<UWidgetAnimation> PopupAnimation;
 
-
-	
 };
