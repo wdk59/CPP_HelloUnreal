@@ -18,30 +18,33 @@ void UObjectPoolSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 		if (!Settings->DamagePopupClass.IsNull())
 		{
 			// LoadSynchronous: 즉시 로딩
-			DamagePopupClass = Settings->DamagePopupClass.LoadSynchronous();
+			DamagePopupType = Settings->DamagePopupClass.LoadSynchronous();
+			BloodPopupType = Settings->BloodPopupClass.LoadSynchronous();
 		}
 	}
 }
 
-AActor* UObjectPoolSubsystem::Spawn(const FTransform& InTransform)
+AActor* UObjectPoolSubsystem::Spawn(const TSubclassOf<AActor> SpawnActorType, const FTransform& InTransform)
 {
 	AActor* Spawned = nullptr;
 
-	if (ReadyActors.Num() > 0)
+	FActorPool* Pool = ReadyActors.Find(SpawnActorType);
+	if (Pool && !Pool->Actors.IsEmpty())
 	{
-		Spawned = ReadyActors.Pop();	// 뒤에서 꺼내기
+		Spawned = ReadyActors[SpawnActorType].Actors.Pop();	// 뒤에서 꺼내기
 		Spawned->SetActorTransform(InTransform);
 		UE_LOG(LogTemp, Log, TEXT("Spawn(Reuse) : %s"), Spawned  ? *Spawned->GetName() : TEXT("None"));
 	}
 	else
 	{
-		if (DamagePopupClass && GetWorld())
+		//if (DamagePopupType && GetWorld())
+		if (GetWorld())
 		{
 			FActorSpawnParameters SpawnParam;
 			SpawnParam.Owner = nullptr;
 			SpawnParam.ObjectFlags = RF_Transient;
 
-			Spawned = GetWorld()->SpawnActor<AActor>(DamagePopupClass, InTransform, SpawnParam);
+			Spawned = GetWorld()->SpawnActor<AActor>(SpawnActorType, InTransform, SpawnParam);
 			UE_LOG(LogTemp, Log, TEXT("Spawn(New) : %s"), Spawned  ? *Spawned->GetName() : TEXT("None"));
 
 #if WITH_EDITOR
@@ -80,5 +83,7 @@ void UObjectPoolSubsystem::ReturnPool(AActor* InActor)
 	}
 
 	ActiveActors.Remove(InActor);
-	ReadyActors.Add(InActor);
+
+	TSubclassOf<AActor> InActorType = InActor->GetClass();
+	ReadyActors.FindOrAdd(InActorType).Actors.Add(InActor);
 }

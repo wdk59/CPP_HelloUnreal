@@ -24,4 +24,7 @@ public :
 	UPROPERTY(Config, EditAnywhere, Category = "Pool Type")
 	TSoftClassPtr<AActor> DamagePopupClass = nullptr;
 
+	UPROPERTY(Config, EditAnywhere, Category = "Pool Type")
+	TSoftClassPtr<AActor> BloodPopupClass = nullptr;
+
 };

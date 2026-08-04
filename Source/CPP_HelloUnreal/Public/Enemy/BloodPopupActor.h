@@ -5,27 +5,25 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Interface/PoolableInterface.h"
-#include "DamagePopupActor.generated.h"
+#include "BloodPopupActor.generated.h"
 
-class UWidgetComponent;
-class UDamagePopupWidget;
+class UNiagaraComponent;
 
 UCLASS()
-class CPP_HELLOUNREAL_API ADamagePopupActor : public AActor, public IPoolableInterface
+class CPP_HELLOUNREAL_API ABloodPopupActor : public AActor, public IPoolableInterface
 {
 	GENERATED_BODY()
 	
 public:	
 	// Sets default values for this actor's properties
-	ADamagePopupActor();
+	ABloodPopupActor();
 
 	UFUNCTION(BlueprintCallable)
 	virtual void UseFinish() override;
 
 	virtual void OnSpawn_Implementation() override;
-	
-	virtual void OnReturn_Implementation() override;
 
+	virtual void OnReturn_Implementation() override;
 
 protected:
 	// Called when the game starts or when spawned
@@ -37,15 +35,11 @@ protected:
 protected :
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	TObjectPtr<UWidgetComponent> DamagePopupWidgetComponent;
+	TObjectPtr<UNiagaraComponent> BloodVFXComponent = nullptr;
 
-private :
-
-	TObjectPtr<UDamagePopupWidget> DamagePopupWidget = nullptr;
-
-public :
+protected :
 	
 	UFUNCTION(BlueprintCallable)
-	void OnPopupStart(float InDamage);
+	void OnBloodVFXFinished(UNiagaraComponent* FinishedComponent);
 
 };

@@ -35,4 +35,13 @@ protected :
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TObjectPtr<USceneComponent> PopupTransform = nullptr;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	TObjectPtr<USceneComponent> BloodTransform = nullptr;
+
+private :
+	
+	TSubclassOf<AActor> DamagePopupType = nullptr;
+
+	TSubclassOf<AActor> BloodPopupType = nullptr;
+
 };

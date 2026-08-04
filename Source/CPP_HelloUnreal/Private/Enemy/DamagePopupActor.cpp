@@ -38,16 +38,6 @@ void ADamagePopupActor::OnSpawn_Implementation()
 	//SetActorTickEnabled();		// Tick 켜고 끔. 이 액터는 애초에 틱을 안 써서 처음부터 꺼둠.
 	//SetActorEnableCollision();	// 콜리전 켜고 끔. 이 액터는 애초에 콜리전을 안 써서 처음부터 꺼둠.
 
-	/*OnPopupStart(0.f);
-
-	FTimerHandle TimerHandle;
-	GetWorldTimerManager().SetTimer(
-		TimerHandle,
-		this,
-		&ADamagePopupActor::OnReturn,
-		LifeTime,
-		false
-	);*/
 }
 
 void ADamagePopupActor::OnReturn_Implementation()
