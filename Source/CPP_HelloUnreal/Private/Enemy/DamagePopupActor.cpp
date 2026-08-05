@@ -35,8 +35,8 @@ void ADamagePopupActor::UseFinish()
 void ADamagePopupActor::OnSpawn_Implementation()
 {
 	SetActorHiddenInGame(false);
-	//SetActorTickEnabled();		// Tick 켜고 끔. 이 액터는 애초에 틱을 안 써서 처음부터 꺼둠.
-	//SetActorEnableCollision();	// 콜리전 켜고 끔. 이 액터는 애초에 콜리전을 안 써서 처음부터 꺼둠.
+	//SetActorTickEnabled(false);		// Tick 켜고 끔. 이 액터는 애초에 틱을 안 써서 처음부터 꺼둠.
+	//SetActorEnableCollision(false);	// 콜리전 켜고 끔. 이 액터는 애초에 콜리전을 안 써서 처음부터 꺼둠.
 
 }
 
@@ -56,7 +56,6 @@ void ADamagePopupActor::BeginPlay()
 	//DamagePopupWidgetComponent->GetUserWidgetObject();	// GetWidget()과 구현 동일
 	// DamagePopupWidgetComponent는 반드시 있어야 돼서 없으면 터지라는 의도로 유효성 검사 생략
 	DamagePopupWidget = Cast<UDamagePopupWidget>(DamagePopupWidgetComponent->GetWidget());
-
 	DamagePopupWidget->OnPopUpAnimationFinished.BindUObject(this, &ADamagePopupActor::UseFinish);
 	
 }

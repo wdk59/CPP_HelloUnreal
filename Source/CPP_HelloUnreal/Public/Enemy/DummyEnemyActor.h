@@ -6,6 +6,9 @@
 #include "GameFramework/Actor.h"
 #include "DummyEnemyActor.generated.h"
 
+class ADamagePopupActor;
+class ABloodPopupActor;
+
 UCLASS()
 class CPP_HELLOUNREAL_API ADummyEnemyActor : public AActor
 {
@@ -37,11 +40,10 @@ protected :
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TObjectPtr<USceneComponent> BloodTransform = nullptr;
-
-private :
 	
-	TSubclassOf<AActor> DamagePopupType = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TSubclassOf<ADamagePopupActor> DamagePopupClass = nullptr;
 
-	TSubclassOf<AActor> BloodPopupType = nullptr;
+	TSubclassOf<ABloodPopupActor> BloodPopupClass = nullptr;
 
 };

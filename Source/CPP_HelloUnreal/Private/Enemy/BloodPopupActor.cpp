@@ -29,7 +29,7 @@ void ABloodPopupActor::UseFinish()
 void ABloodPopupActor::OnSpawn_Implementation()
 {
 	SetActorHiddenInGame(false);
-	//SetActorTickEnabled();
+	//SetActorTickEnabled(false);
 	SetActorEnableCollision(false);
 
 	BloodVFXComponent->Activate();
@@ -37,7 +37,7 @@ void ABloodPopupActor::OnSpawn_Implementation()
 
 void ABloodPopupActor::OnReturn_Implementation()
 {
-	BloodVFXComponent->Deactivate();
+	//BloodVFXComponent->Deactivate();
 
 	SetActorLocation(FVector(0.f, 0.f, -10000.f));
 	SetActorHiddenInGame(true);

@@ -6,13 +6,27 @@
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "ObjectPoolSubsystem.generated.h"
 
+class UObjectPoolDataAsset;
+
+// 오브젝트 풀 하나를 나타낼 구조체     
 USTRUCT()
-struct FActorPool
+struct FObjectPool
 {
+	// USTRUCT()나 UCLASS()를 붙였으면 GENERATED_BODY()가 있어야
+	// .generated.h에 코드가 생성돼 언리얼에서 제공하는 기능을 사용할 수 있게 됨
 	GENERATED_BODY()
 
+	// 사용 대기 중인 액터들
 	UPROPERTY(Transient)
-	TArray<TObjectPtr<AActor>> Actors;
+	TArray<TObjectPtr<AActor>> ReadyActors;
+
+	// 실제 사용 중인 액터들
+	UPROPERTY(Transient)
+	TSet<TObjectPtr<AActor>> ActiveActors;
+
+	// 초기 생성 개수
+	int32 InitialSize = 0;
+	
 };
 
 /**
@@ -26,25 +40,49 @@ class CPP_HELLOUNREAL_API UObjectPoolSubsystem : public UGameInstanceSubsystem
 public :
 
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
+	virtual void Deinitialize() override;
 
-	AActor* Spawn(const TSubclassOf<AActor> SpawnActorType, const FTransform& InTransform);
+	UFUNCTION(BlueprintCallable)
+	bool RegisterPoolDataAsset(const UObjectPoolDataAsset* InDataAsset, bool bWarmup = false);
+	
+	UFUNCTION(BlueprintCallable)
+	bool UnRegisterPoolDataAsset(const UObjectPoolDataAsset* InDataAsset);
 
+	UFUNCTION(BlueprintCallable)
+	void Warmup(TSubclassOf<AActor> InClass);
+
+	UFUNCTION(BlueprintCallable)
+	void WarmupAll();
+
+	UFUNCTION(BlueprintCallable)
+	void ClearPool(TSubclassOf<AActor> InClass);
+	
+	UFUNCTION(BlueprintCallable)
+	void ClearAllPools();
+
+	UFUNCTION(BlueprintCallable)
+	AActor* Spawn(TSubclassOf<AActor> InClassType, const FTransform& InTransform);
+
+	// AActor* Spawn()에 대한 호출용
+	// C++ 클래스 전용
+	template<typename T>
+	T* Spawn(TSubclassOf<T> InClassType, const FTransform& InTransform)
+	{
+		return Cast<T>(Spawn(TSubclassOf<AActor>(InClassType), InTransform));
+	}
+
+	template<typename T>
+	T* Spawn(const FTransform& InTransform)
+	{
+		return Cast<T>(Spawn(T::StaticClass(), InTransform));
+	}
+
+	UFUNCTION(BlueprintCallable)
 	void ReturnPool(AActor* InActor);
 
 protected :
 
-	// 사용 대기 중인 액터들
 	UPROPERTY(Transient)
-	TMap<TSubclassOf<AActor>, FActorPool> ReadyActors;
-
-	// 실제 사용 중인 액터들: 중간에 있을 때 비활성화될 수 있기 때문에 Array가 아닌 Set으로 저장
-	UPROPERTY(Transient)
-	TSet<TObjectPtr<AActor>> ActiveActors;
-
-	UPROPERTY()
-	TSubclassOf<AActor> DamagePopupType = nullptr;
-
-	UPROPERTY()
-	TSubclassOf<AActor> BloodPopupType = nullptr;
+	TMap<const TSubclassOf<AActor>, FObjectPool> ObjectPools;
 	
 };

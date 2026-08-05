@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DeveloperSettings.h"
+#include "Datas/ObjectPoolDataAsset.h"
 #include "ObjectPoolSettings.generated.h"
 
 /**
@@ -22,9 +23,6 @@ public :
 	// Config: 이 프로퍼티는 ini 파일에 저장되고 불러와질 수 있다.
 	// TSoftClassPtr: 타입에 대한 소프트 레퍼런스 (TSubclassOf로 받으면 무조건 로드)
 	UPROPERTY(Config, EditAnywhere, Category = "Pool Type")
-	TSoftClassPtr<AActor> DamagePopupClass = nullptr;
-
-	UPROPERTY(Config, EditAnywhere, Category = "Pool Type")
-	TSoftClassPtr<AActor> BloodPopupClass = nullptr;
+	TArray<TSoftObjectPtr<UObjectPoolDataAsset>> PoolDataAssets;
 
 };

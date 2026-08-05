@@ -2,7 +2,6 @@
 
 
 #include "Enemy/DummyEnemyActor.h"
-#include "Config/ObjectPoolSettings.h"
 #include "Frameworks/Subsystem/ObjectPoolSubsystem.h"
 #include "Enemy/DamagePopupActor.h"
 #include "Enemy/BloodPopupActor.h"
@@ -23,18 +22,6 @@ ADummyEnemyActor::ADummyEnemyActor()
 	BloodTransform = CreateDefaultSubobject<USceneComponent>(TEXT("BloodTransform"));
 	BloodTransform->SetupAttachment(Mesh);
 	BloodTransform->SetRelativeLocation(FVector(0.f, 0.f, 0.f));
-
-	// 프로젝트 세팅에서 데이터 읽어오기
-	const UObjectPoolSettings* Settings = GetDefault<UObjectPoolSettings>();
-	if (Settings)
-	{
-		if (!Settings->DamagePopupClass.IsNull())
-		{
-			// LoadSynchronous: 즉시 로딩
-			DamagePopupType = Settings->DamagePopupClass.LoadSynchronous();
-			BloodPopupType = Settings->BloodPopupClass.LoadSynchronous();
-		}
-	}
 
 }
 
@@ -59,15 +46,20 @@ float ADummyEnemyActor::TakeDamage(float DamageAmount, FDamageEvent const& Damag
 	if (UGameInstance* GameInstance = GetGameInstance())
 	{
 		UObjectPoolSubsystem* SubSystem = GameInstance->GetSubsystem<UObjectPoolSubsystem>();
-		
-		AActor* SpawnedActor = SubSystem->Spawn(DamagePopupType, PopupTransform->GetComponentTransform());
-		ADamagePopupActor* DamagePopup = Cast<ADamagePopupActor>(SpawnedActor);
-		DamagePopup->OnPopupStart(Damage);
 
-		AActor* SpawnedBloodActor = SubSystem->Spawn(BloodPopupType, BloodTransform->GetComponentTransform());
-		ABloodPopupActor* BloodPopup = Cast<ABloodPopupActor>(SpawnedBloodActor);
+		//AActor* Spawned = SubSystem->Spawn(
+		//	DamagePopupClass, PopupTransform->GetComponentTransform());
+		//ADamagePopupActor* DamagePopup = Cast<ADamagePopupActor>(Spawned);
+		ADamagePopupActor* DamagePopup = SubSystem->Spawn(
+			DamagePopupClass, PopupTransform->GetRelativeTransform()
+		);
+
+		if (DamagePopup)
+		{
+			DamagePopup->OnPopupStart(Damage);
+		}
+
 	}
 
 	return Damage;
 }
-
