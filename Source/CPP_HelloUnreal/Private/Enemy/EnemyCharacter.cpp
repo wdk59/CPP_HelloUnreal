@@ -23,7 +23,7 @@ AEnemyCharacter::AEnemyCharacter()
 
 UStatComponent* AEnemyCharacter::GetStatComponent() const
 {
-	return nullptr;
+	return StatComp;
 }
 
 // Called when the game starts or when spawned
@@ -48,11 +48,13 @@ float AEnemyCharacter::TakeDamage(float DamageAmount, FDamageEvent const& Damage
 {
 	float Damage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 
+	IHealthInterface::Execute_ReceiveDamage(StatComp, Damage);
+
 	return Damage;
 }
 
 void AEnemyCharacter::OnDie()
 {
 	UE_LOG(LogTemp, Log, TEXT("%s가 죽었습니다."), *this->GetName());
-	ItemDropTable->GetRowMap();
+	//ItemDropTable->GetRowMap();
 }

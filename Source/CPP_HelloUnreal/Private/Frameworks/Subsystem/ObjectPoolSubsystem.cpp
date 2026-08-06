@@ -23,9 +23,9 @@ void UObjectPoolSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 		{
 			TObjectPtr<UObjectPoolDataAsset> LoadedDataAsset = DataAsset.LoadSynchronous();
 			FObjectPool& Pool = ObjectPools.FindOrAdd(LoadedDataAsset->ActorClass.LoadSynchronous());
-			Pool.MaxSize = DataAsset->MaxSize;
-			Pool.MaxPolicy = DataAsset->MaxPolicy;
-			Pool.InitialSize = DataAsset->InitialSize;
+			Pool.MaxSize = LoadedDataAsset->MaxSize;
+			Pool.MaxPolicy = LoadedDataAsset->MaxPolicy;
+			Pool.InitialSize = LoadedDataAsset->InitialSize;
 		}
 	}
 }
@@ -90,20 +90,20 @@ void UObjectPoolSubsystem::Warmup(TSubclassOf<AActor> InClass)
 			UE_LOG(LogTemp, Log, TEXT("Warmup : %s"), Spawned ? *Spawned->GetName() : TEXT("None"));
 
 			/* Return */
+			if (Spawned) {
+				if (Spawned->GetClass()->ImplementsInterface(UPoolableInterface::StaticClass()))
+				{
+					IPoolableInterface::Execute_OnReturn(Spawned);
+				}
+				else
+				{
+					Spawned->SetActorHiddenInGame(true);
+					Spawned->SetActorTickEnabled(false);
+					Spawned->SetActorEnableCollision(false);
+				}
 
-			if (Spawned->GetClass()->ImplementsInterface(UPoolableInterface::StaticClass()))
-			{
-				IPoolableInterface::Execute_OnReturn(Spawned);
+				Pool->ReadyActors.Add(Spawned);
 			}
-			else
-			{
-				Spawned->SetActorHiddenInGame(true);
-				Spawned->SetActorTickEnabled(false);
-				Spawned->SetActorEnableCollision(false);
-			}
-
-			Pool->ReadyActors.Add(Spawned);
-
 		}
 	}
 }
@@ -133,6 +133,8 @@ void UObjectPoolSubsystem::ClearPool(TSubclassOf<AActor> InClass)
 				Actor->Destroy();
 		}
 		Pool->ActiveActors.Empty();
+		Pool->ActiveOrderList->Empty();
+		Pool->ActiveNodeMap->Empty();
 
 		ObjectPools.Remove(InClass);
 	}
@@ -155,6 +157,8 @@ void UObjectPoolSubsystem::ClearAllPools()
 				Actor->Destroy();
 		}
 		Pool.ActiveActors.Empty();
+		Pool.ActiveOrderList->Empty();
+		Pool.ActiveNodeMap->Empty();
 	}
 
 	ObjectPools.Empty();
