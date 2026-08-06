@@ -14,6 +14,7 @@ void UDamagePopupWidget::OnAnimationFinished_Implementation(const UWidgetAnimati
 	{
 		UE_LOG(LogTemp, Log, TEXT("OnAnimationFinished: Popup Animation"));
 		// 애니메이션이 종료됨을 알림
+		// 팝업 애니메이션이 종료됨
 		OnPopUpAnimationFinished.ExecuteIfBound();
 	}
 }
@@ -27,5 +28,6 @@ void UDamagePopupWidget::SetDamage(float InDamage)
 
 void UDamagePopupWidget::PlayPopupAnimation()
 {
+	SetAnimationCurrentTime(PopupAnimation, 0.f);	// 애니메이션 재생 시간 초기화 보장
 	PlayAnimation(PopupAnimation);
 }

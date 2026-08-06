@@ -23,6 +23,8 @@ void UObjectPoolSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 		{
 			TObjectPtr<UObjectPoolDataAsset> LoadedDataAsset = DataAsset.LoadSynchronous();
 			FObjectPool& Pool = ObjectPools.FindOrAdd(LoadedDataAsset->ActorClass.LoadSynchronous());
+			Pool.MaxSize = DataAsset->MaxSize;
+			Pool.MaxPolicy = DataAsset->MaxPolicy;
 			Pool.InitialSize = DataAsset->InitialSize;
 		}
 	}
@@ -30,7 +32,7 @@ void UObjectPoolSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
 void UObjectPoolSubsystem::Deinitialize()
 {
-	//ClearAllPools();
+	ClearAllPools();
 
 	Super::Deinitialize();
 }
@@ -47,6 +49,8 @@ bool UObjectPoolSubsystem::RegisterPoolDataAsset(const UObjectPoolDataAsset* InD
 
 	FObjectPool& Pool = ObjectPools.Add(LoadedActorClass);	// 새로 추가
 	Pool.InitialSize = InDataAsset->InitialSize;			// 초기값 세팅
+	Pool.MaxSize = InDataAsset->MaxSize;
+	Pool.MaxPolicy = InDataAsset->MaxPolicy;
 
 	if (bWarmup)
 	{
@@ -69,23 +73,37 @@ bool UObjectPoolSubsystem::UnRegisterPoolDataAsset(const UObjectPoolDataAsset* I
 
 void UObjectPoolSubsystem::Warmup(TSubclassOf<AActor> InClass)
 {
+	if (!GetWorld())
+		return;
+
 	if (FObjectPool* Pool = ObjectPools.Find(InClass))
 	{
 		FTransform Init(FVector::DownVector * 10000.f);
 		
-		TArray<TWeakObjectPtr<AActor>> SpawnedArray;
-		SpawnedArray.Reserve(Pool->InitialSize);
 		for (int i = 0; i < Pool->InitialSize; i++)
 		{
-			SpawnedArray.Add(Spawn(InClass, Init));
-		}
-		
-		// 스폰하자마자 풀에 넣으면 스폰 요청했을 때
-		// 새로운 액터를 생성하지 않고, 풀에 있는 거를 가져오기 때문에
-		// 미리 필요한만큼 전부 생성한 다음에 풀에 넣음
-		for (TWeakObjectPtr<AActor> Spawned : SpawnedArray)
-		{
-			ReturnPool(Spawned.Get());
+			// 액터 스폰해서 바로 ReadyActors에 넣기
+
+			/* Spawn */
+
+			AActor* Spawned = CreateNewObject(InClass, Init);
+			UE_LOG(LogTemp, Log, TEXT("Warmup : %s"), Spawned ? *Spawned->GetName() : TEXT("None"));
+
+			/* Return */
+
+			if (Spawned->GetClass()->ImplementsInterface(UPoolableInterface::StaticClass()))
+			{
+				IPoolableInterface::Execute_OnReturn(Spawned);
+			}
+			else
+			{
+				Spawned->SetActorHiddenInGame(true);
+				Spawned->SetActorTickEnabled(false);
+				Spawned->SetActorEnableCollision(false);
+			}
+
+			Pool->ReadyActors.Add(Spawned);
+
 		}
 	}
 }
@@ -122,10 +140,23 @@ void UObjectPoolSubsystem::ClearPool(TSubclassOf<AActor> InClass)
 
 void UObjectPoolSubsystem::ClearAllPools()
 {
-	for (auto& [Key, _] : ObjectPools)
+	for (auto& [Key, Pool] : ObjectPools)
 	{
-		ClearPool(Key);
+		for (AActor* Actor : Pool.ReadyActors)
+		{
+			if (IsValid(Actor))
+				Actor->Destroy();
+		}
+		Pool.ReadyActors.Empty();
+		
+		for (AActor* Actor : Pool.ActiveActors)
+		{
+			if (IsValid(Actor))
+				Actor->Destroy();
+		}
+		Pool.ActiveActors.Empty();
 	}
+
 	ObjectPools.Empty();
 }
 
@@ -140,34 +171,57 @@ AActor* UObjectPoolSubsystem::Spawn(const TSubclassOf<AActor> InClassType, const
 
 	AActor* Spawned = nullptr;
 
-	if (Pool->ReadyActors.Num() > 0)
+	// ReadyActors에 쓸 수 있는 게 있으면 쓴다.
+	Spawned = GetReadyActor(Pool);
+	if (Spawned)
 	{
-		Spawned = Pool->ReadyActors.Pop();	// 뒤에서 꺼내기
 		Spawned->SetActorTransform(InTransform);
-		UE_LOG(LogTemp, Log, TEXT("Spawn(Reuse) : %s"), Spawned  ? *Spawned->GetName() : TEXT("None"));
+		UE_LOG(LogTemp, Log, TEXT("Spawn(Reuse) : %s"), Spawned ? *Spawned->GetName() : TEXT("None"));
 	}
 	else
 	{
-		if (GetWorld())
-		{
-			FActorSpawnParameters SpawnParam;
-			SpawnParam.Owner = nullptr;
-			SpawnParam.ObjectFlags = RF_Transient;
+		// ReadyActors에서 쓸 수 있는 것이 없다 => 새로 만들기
+			const uint32 TotalCount = Pool->ActiveActors.Num() + Pool->ReadyActors.Num();
+			const bool bMax = TotalCount >= static_cast<uint32>(Pool->MaxSize);
 
-			Spawned = GetWorld()->SpawnActor<AActor>(InClassType, InTransform, SpawnParam);
-			UE_LOG(LogTemp, Log, TEXT("Spawn(New) : %s"), Spawned  ? *Spawned->GetName() : TEXT("None"));
-
-#if WITH_EDITOR
-			if (Spawned)
+			if (!bMax)
 			{
-				Spawned->SetFolderPath(FName("Pool"));	// 아웃라이너에 표시될 폴더 정리
+				Spawned = CreateNewObject(InClassType, InTransform);
+				UE_LOG(LogTemp, Log, TEXT("Spawn(New) : %s"), Spawned ? *Spawned->GetName() : TEXT("None"));
 			}
-#endif
-		}
-	}
+			else
+			{
+				switch (Pool->MaxPolicy)
+				{
+				case EObjectPoolPolicy::DoNotSpawn :
+					return nullptr;	// 스폰 안 하고 바로 끝내기
 
+				case EObjectPoolPolicy::Grow :
+					CreateNewObject(InClassType, InTransform);
+					UE_LOG(LogTemp, Log, TEXT("Spawn(New) : %s"), Spawned ? *Spawned->GetName() : TEXT("None"));
+					break;
+
+				case EObjectPoolPolicy::ReuseOldest :
+					if (FOrderNode* HeadNode = Pool->ActiveOrderList->GetHead())
+					{
+						AActor* OldestActor = HeadNode->GetValue();
+						ReturnPool(OldestActor);		// 편의성 + 리셋을 위해 ReturnPool 먼저 수행
+						Spawned = GetReadyActor(Pool);
+						Spawned->SetActorTransform(InTransform);
+						
+						UE_LOG(LogTemp, Log, TEXT("Spawn(Oldest) : %s"), Spawned ? *Spawned->GetName() : TEXT("None"));
+					}
+					break;
+
+				default:
+					break;
+				}
+			}
+	}
+	
 	if (Spawned)
 	{
+		// ReadyActors에서 꺼냈든 새로 만들었든 스폰됐을 대 해야 할 일 처리
 		if (Spawned->GetClass()->ImplementsInterface(UPoolableInterface::StaticClass()))
 		{
 			//UE_LOG(LogTemp, Log, TEXT("OnSpawn"));
@@ -181,6 +235,9 @@ AActor* UObjectPoolSubsystem::Spawn(const TSubclassOf<AActor> InClassType, const
 		}
 
 		Pool->ActiveActors.Add(Spawned);
+		FOrderNode* NewNode = new FOrderNode(Spawned);
+		Pool->ActiveOrderList->AddTail(NewNode);
+		Pool->ActiveNodeMap->Add(Spawned, NewNode);
 	}
 
 	return Spawned;
@@ -211,5 +268,54 @@ void UObjectPoolSubsystem::ReturnPool(AActor* InActor)
 	}
 
 	Pool->ActiveActors.Remove(InActor);
+	if (FOrderNode** FoundNode = Pool->ActiveNodeMap->Find(InActor))
+	{
+		Pool->ActiveOrderList->RemoveNode(*FoundNode, true);	// 리스트에서 FoundNode 제거하고 delete까지 처리
+		Pool->ActiveNodeMap->Remove(InActor);
+	}
+
 	Pool->ReadyActors.Add(InActor);
+}
+
+AActor* UObjectPoolSubsystem::CreateNewObject(TSubclassOf<AActor> InClassType, const FTransform& InTransform)
+{
+	if (!GetWorld())
+		return nullptr;
+
+	FActorSpawnParameters SpawnParam;
+	SpawnParam.Owner = nullptr;
+	SpawnParam.ObjectFlags = RF_Transient;
+
+	AActor* Spawned = GetWorld()->SpawnActor<AActor>(InClassType, InTransform, SpawnParam);
+	UE_LOG(LogTemp, Log, TEXT("Spawn(New) : %s"), Spawned ? *Spawned->GetName() : TEXT("None"));
+
+#if WITH_EDITOR
+	if (Spawned)
+	{
+		Spawned->SetFolderPath(FName("Pool"));	// 아웃라이너에 표시될 폴더 정리
+	}
+#endif
+
+	return Spawned;
+}
+
+AActor* UObjectPoolSubsystem::GetReadyActor(FObjectPool* InPool)
+{
+	if (!InPool)
+		return nullptr;
+
+	AActor* ReadyActor = nullptr;
+
+	while (InPool->ReadyActors.Num() > 0)
+	{
+		// ReadyActors에서 쓸 수 있는 것이 있다 => 꺼내 쓰기
+		AActor* Candidate = InPool->ReadyActors.Pop();	// 뒤에서 꺼내기
+		if (IsValid(Candidate))
+		{
+			ReadyActor = Candidate;
+			break;
+		}
+	}
+
+	return ReadyActor;
 }
