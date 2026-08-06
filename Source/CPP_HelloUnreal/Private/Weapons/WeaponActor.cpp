@@ -19,7 +19,7 @@ AWeaponActor::AWeaponActor()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
 
-	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RootMesh"));
+	Mesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("RootMesh"));
 	SetRootComponent(Mesh);
 	//Mesh->SetCollisionProfileName(TEXT("NoCollision"));	// 프로파일을 이용해 한 번에 세팅 (실제 적용되는 타이밍이 늦음)
 	
@@ -80,7 +80,7 @@ void AWeaponActor::InitializeWeapon(UWeaponDataAsset* InData)
 	if (WeaponData->IsLoaded())	// 로딩이 완료되었을 때만 처리
 	{
 		// 메시 설정 및 위치 조정
-		Mesh->SetStaticMesh(WeaponData->Mesh.Get());	// 전제: 실행 시점에 WeaponData의 로딩 완료. Weapon 스폰 시 SpawnActorDeferred로 보장.
+		Mesh->SetSkeletalMesh(WeaponData->Mesh.Get());	// 전제: 실행 시점에 WeaponData의 로딩 완료. Weapon 스폰 시 SpawnActorDeferred로 보장.
 		//Mesh->SetRelativeLocation(WeaponData->LocationOffset);
 
 		// 나이아가라 설정

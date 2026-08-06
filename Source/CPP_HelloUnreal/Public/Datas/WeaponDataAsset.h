@@ -8,7 +8,7 @@
 #include "NiagaraSystem.h"	// TSoftObjectPtr로 선언하기 때문에 헤더 필요
 #include "WeaponDataAsset.generated.h"
 
-class UStaticMesh;
+class USkeletalMeshComponent;
 
 /**
  * 
@@ -22,7 +22,7 @@ public :
 	
 	// 무기의 메시
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Appearance")
-	TSoftObjectPtr<UStaticMesh> Mesh;
+	TSoftObjectPtr<USkeletalMesh> Mesh;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Appearance")
 	TSoftObjectPtr<UNiagaraSystem> TrailVFX;

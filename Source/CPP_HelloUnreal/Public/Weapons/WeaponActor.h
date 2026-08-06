@@ -46,7 +46,7 @@ protected :
 	TObjectPtr<UCapsuleComponent> HitArea = nullptr;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	TObjectPtr<UStaticMeshComponent> Mesh = nullptr;
+	TObjectPtr<USkeletalMeshComponent> Mesh = nullptr;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TObjectPtr<UNiagaraComponent> TrailVFX = nullptr;
