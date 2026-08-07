@@ -13,6 +13,5 @@ void UWeaponDataAsset::OnAsyncRequest(TArray<FSoftObjectPath>& InOutArray) const
 
 bool UWeaponDataAsset::IsLoaded() const
 {
-	//return Super::IsLoaded() && Mesh.IsValid() && TrailVFX.IsValid();
-	return Super::IsLoaded() && Mesh.IsValid();
+	return Super::IsLoaded() && Mesh.IsValid() && TrailVFX.IsValid();
 }
