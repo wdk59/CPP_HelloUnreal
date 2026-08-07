@@ -5,6 +5,8 @@
 #include "Components/StatComponent.h"
 #include "Interface/HealthInterface.h"
 #include "CommonHeader/ItemDropTable.h"
+#include "Items/PickupBase.h"
+#include "Items/PickupWeapon.h"
 
 #include "CPP_HelloUnreal/CPP_HelloUnreal.h"
 #include "Components/CapsuleComponent.h"
@@ -51,6 +53,38 @@ float AEnemyCharacter::TakeDamage(float DamageAmount, FDamageEvent const& Damage
 	IHealthInterface::Execute_ReceiveDamage(StatComp, Damage);
 
 	return Damage;
+}
+
+void AEnemyCharacter::OnItemDrop()
+{
+	if (ItemDropTable)
+	{
+		TMap<FName, uint8*> Map = ItemDropTable->GetRowMap();
+		for (auto& pair : Map)
+		{
+			//FItemDropTableRow* Row = reinterpret_cast<FItemDropTableRow*>(pair.Value);
+			//(FItemDropTableRow*)(pair.Value);
+
+			TArray<FItemDropTableRow*> AllRows;
+			ItemDropTable->GetAllRows(TEXT("AEnemyCharacter::OnItemDrop"), AllRows);
+			for (FItemDropTableRow* Row : AllRows)
+			{
+				// 필수 데이터 확인
+				if (!Row || !Row->PickupData || PickupClass)
+					continue;	// 행 정보가 잘못됐으면 그 행(아이템) 스킵
+				
+				// 드랍 확률 체크
+				if (FMath::FRand() > Row->DropRate)
+					continue;	// 드랍 확률따라 행(아이템) 스킵
+
+				//GetWorld()->SpawnActor<AActor>(PickupClass, GetActorTransform());
+				APickupBase* PickupActor = GetWorld()->SpawnActor<APickupBase>(PickupClass, GetActorTransform());
+				PickupActor->InitializePickup(Row->PickupData);
+			}
+		}
+		//ItemDropTable->GetRowMap();
+		//ItemDropTable->GetAllRows();
+	}
 }
 
 void AEnemyCharacter::OnDie()

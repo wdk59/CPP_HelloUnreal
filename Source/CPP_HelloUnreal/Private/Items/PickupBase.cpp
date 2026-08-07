@@ -2,6 +2,7 @@
 
 
 #include "Items/PickupBase.h"
+#include "CPP_HelloUnreal/CPP_HelloUnreal.h"
 #include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "NiagaraComponent.h"
@@ -14,14 +15,21 @@ APickupBase::APickupBase()
 
 	SphereCollision = CreateDefaultSubobject<USphereComponent>(TEXT("RootCollision"));
 	SphereCollision->InitSphereRadius(100.f);
+	SphereCollision->SetCollisionResponseToAllChannels(ECR_Ignore);
+	SphereCollision->SetCollisionResponseToChannel(ECC_Player, ECR_Overlap);
 	SetRootComponent(SphereCollision);
 
-	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
+	Mesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Mesh"));
 	Mesh->SetupAttachment(SphereCollision);
 	Mesh->SetCollisionProfileName("NoCollision");
 
 	NiagaraComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("VFX"));
 	NiagaraComponent->SetupAttachment(SphereCollision);
+}
+
+void APickupBase::InitializePickup(UWeaponDataAsset* InData)
+{
+	DataAsset = InData;
 }
 
 // Called when the game starts or when spawned

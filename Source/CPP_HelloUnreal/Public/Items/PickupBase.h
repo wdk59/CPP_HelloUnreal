@@ -8,6 +8,7 @@
 
 class USphereComponent;
 class UNiagaraComponent;
+class UWeaponDataAsset;
 
 UCLASS()
 class CPP_HELLOUNREAL_API APickupBase : public AActor
@@ -17,6 +18,8 @@ class CPP_HELLOUNREAL_API APickupBase : public AActor
 public:	
 	// Sets default values for this actor's properties
 	APickupBase();
+
+	virtual void InitializePickup(UWeaponDataAsset* InData);
 
 protected:
 	// Called when the game starts or when spawned
@@ -28,6 +31,20 @@ protected:
 	virtual void NotifyActorBeginOverlap(AActor* OtherActor) override;
 
 protected:
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	TObjectPtr<USphereComponent> SphereCollision;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	TObjectPtr<USkeletalMeshComponent> Mesh = nullptr;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	TObjectPtr<UNiagaraComponent> NiagaraComponent;
+
+protected:
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Base Data");
+	TObjectPtr<UWeaponDataAsset> DataAsset = nullptr;
 
 	// 메시의 기본 위치
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Base Data");
@@ -48,17 +65,6 @@ protected:
 	// 위아래로 움직이는 거리
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Effect|Default")
 	float UpDownHeight = 100.f;
-
-protected:
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	TObjectPtr<USphereComponent> SphereCollision;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	TObjectPtr<UStaticMeshComponent> Mesh = nullptr;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	TObjectPtr<UNiagaraComponent> NiagaraComponent;
 
 private :
 
