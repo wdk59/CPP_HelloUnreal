@@ -100,7 +100,9 @@ void AEnemyCharacter::OnItemDrop()
 void AEnemyCharacter::OnDie()
 {
 	UE_LOG(LogTemp, Log, TEXT("%s가 죽었습니다."), *this->GetName());
-	//ItemDropTable->GetRowMap();
+	
+	// 아이템 드랍 처리
+	OnItemDrop();
 }
 
 void AEnemyCharacter::SpawnPickup(UItemDataAsset* ItemDataAsset)
