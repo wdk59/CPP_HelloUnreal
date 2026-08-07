@@ -4,7 +4,8 @@
 #include "Items/PickupBase.h"
 #include "CPP_HelloUnreal/CPP_HelloUnreal.h"
 #include "Components/SphereComponent.h"
-#include "Components/StaticMeshComponent.h"
+#include "Components/MeshComponent.h"
+#include "Datas/Items/ItemDataAsset.h"
 #include "NiagaraComponent.h"
 
 // Sets default values
@@ -19,15 +20,11 @@ APickupBase::APickupBase()
 	SphereCollision->SetCollisionResponseToChannel(ECC_Player, ECR_Overlap);
 	SetRootComponent(SphereCollision);
 
-	Mesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Mesh"));
-	Mesh->SetupAttachment(SphereCollision);
-	Mesh->SetCollisionProfileName("NoCollision");
-
 	NiagaraComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("VFX"));
 	NiagaraComponent->SetupAttachment(SphereCollision);
 }
 
-void APickupBase::InitializePickup(UWeaponDataAsset* InData)
+void APickupBase::InitializePickup(UItemDataAsset* InData)
 {
 	DataAsset = InData;
 }
@@ -70,17 +67,25 @@ void APickupBase::OnUpdateUpdownSpin(float InDeltaTime)
 	if (!IsCurveAssetReady()) return;
 
 	ElapsedTime += InDeltaTime;
+	if (UMeshComponent* PickupMesh = GetMesh())
+	{
+		float Div = FMath::Max(UpDownDuration, 0.001f);
+		float Progress = FMath::Fmod(ElapsedTime / Div, 1.f);
+		FVector NewMeshLocation = MeshBaseLocation;
+		NewMeshLocation.Z += UpDownCurve->GetFloatValue(Progress) * UpDownHeight;
 
-	float Div = FMath::Max(UpDownDuration, 0.001f);
-	float Progress = FMath::Fmod(ElapsedTime / Div, 1.f);
-	FVector NewMeshLocation = MeshBaseLocation;
-	NewMeshLocation.Z += UpDownCurve->GetFloatValue(Progress) * UpDownHeight;
+		PickupMesh->SetRelativeLocation(NewMeshLocation);
 
-	Mesh->SetRelativeLocation(NewMeshLocation);
+		float NewAngle = SpinCurve->GetFloatValue(Progress) * 360.f;
+		PickupMesh->SetRelativeRotation(FRotator(0.f, NewAngle, 0.f));
 
-	float NewAngle = SpinCurve->GetFloatValue(Progress) * 360.f;
-	Mesh->SetRelativeRotation(FRotator(0.f, NewAngle, 0.f));
+	}
 
+}
+
+UMeshComponent* APickupBase::GetMesh() const
+{
+	return nullptr;
 }
 
 bool APickupBase::IsCurveAssetReady() const

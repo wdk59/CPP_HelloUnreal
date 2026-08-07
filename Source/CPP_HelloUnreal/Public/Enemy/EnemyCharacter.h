@@ -8,7 +8,7 @@
 #include "EnemyCharacter.generated.h"
 
 class UStatComponent;
-class APickupWeapon;
+class UItemDataAsset;
 
 UCLASS()
 class CPP_HELLOUNREAL_API AEnemyCharacter : public ACharacter, public IStatInterface
@@ -42,12 +42,13 @@ protected :
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TObjectPtr<UDataTable> ItemDropTable;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	TSubclassOf<APickupWeapon> PickupClass;
-
 protected :
 
 	UFUNCTION(BlueprintCallable)
 	virtual void OnDie();
+
+private :
+
+	void SpawnPickup(UItemDataAsset* ItemDataAsset);
 
 };

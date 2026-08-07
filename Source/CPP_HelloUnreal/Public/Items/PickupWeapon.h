@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Items/PickupBase.h"
-#include "Datas/WeaponDataAsset.h"
+#include "Datas/Items/WeaponDataAsset.h"
 #include "PickupWeapon.generated.h"
 
 class UNiagaraComponent;
@@ -17,9 +17,11 @@ class CPP_HELLOUNREAL_API APickupWeapon : public APickupBase
 {
 	GENERATED_BODY()
 
+	APickupWeapon();
+
 public :
 
-	virtual void InitializePickup(UWeaponDataAsset* InData) override;
+	virtual void InitializePickup(UItemDataAsset* InData) override;
 
 protected :
 
@@ -48,6 +50,11 @@ protected :
 	// PickupHeight로 인해 올라가는 높이
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Effect|Pickup")
 	float PickupEffectHeight = 50.f;
+
+protected :
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	TObjectPtr<USkeletalMeshComponent> Mesh = nullptr;
 
 private :
 

@@ -3,7 +3,7 @@
 
 #include "Weapons/WeaponActor.h"
 #include "Interface/WeaponUserInterface.h"
-#include "Datas/WeaponDataAsset.h"
+#include "Datas/Items/WeaponDataAsset.h"
 
 #include "CPP_HelloUnreal/CPP_HelloUnreal.h"
 #include "Components/CapsuleComponent.h"
@@ -209,7 +209,7 @@ void AWeaponActor::OnEquipped(AActor* InOwner)
 		AttachToComponent(OwnerCharacter->GetMesh(), AttachRules, WeaponData->AttachSocketName);
 	
 		// 오프셋 적용
-		SetActorRelativeLocation(WeaponData->LocationOffset);
+		SetActorRelativeLocation(WeaponData->AttachLocationOffset);
 		
 		HitArea->IgnoreActorWhenMoving(OwnerCharacter.Get(), true);	// 이미 OwnerCharacter와의 충돌은 무시되지만, 만약을 대비한 것
 

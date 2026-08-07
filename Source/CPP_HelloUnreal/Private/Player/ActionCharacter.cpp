@@ -2,7 +2,7 @@
 
 
 #include "Player/ActionCharacter.h"
-#include "Datas/WeaponDataAsset.h"
+#include "Datas/Items/WeaponDataAsset.h"
 #include "Components/StatComponent.h"
 #include "Components/WeaponComponent.h"
 

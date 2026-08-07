@@ -6,7 +6,14 @@
 #include "Interface/WeaponUserInterface.h"
 #include "Components/SphereComponent.h"
 
-void APickupWeapon::InitializePickup(UWeaponDataAsset* InData)
+APickupWeapon::APickupWeapon()
+{
+	Mesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Mesh"));
+	Mesh->SetupAttachment(GetRootComponent());
+	Mesh->SetCollisionProfileName("NoCollision");
+}
+
+void APickupWeapon::InitializePickup(UItemDataAsset* InData)
 {
 	Super::InitializePickup(InData);
 
@@ -16,7 +23,7 @@ void APickupWeapon::InitializePickup(UWeaponDataAsset* InData)
 		if (USkeletalMesh* MeshData = WeaponData->Mesh.LoadSynchronous())
 		{
 			Mesh->SetSkeletalMesh(MeshData);
-			Mesh->SetRelativeLocation(MeshBaseLocation + WeaponData->LocationOffset);
+			Mesh->SetRelativeLocation(MeshBaseLocation + WeaponData->AttachLocationOffset);
 		}
 
 	}

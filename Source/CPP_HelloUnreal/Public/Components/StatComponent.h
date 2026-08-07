@@ -70,6 +70,9 @@ public:
 	virtual void ReceiveDamage_Implementation(float InAmount) override;
 	virtual void RecoveryHealth_Implementation(float InAmount) override;
 
+	UFUNCTION(BlueprintCallable, Category = "Health")
+	virtual bool IsAlive() const override;
+
 public :
 	UPROPERTY(BlueprintAssignable, Category = "Stat|Stamina")
 	FOnStatEmpty OnStaminaEmpty;
@@ -112,5 +115,7 @@ private :
 private :
 	
 	void StaminaAutoRecoveryPerTick();
+
+	bool bAlive = true;
 
 };
