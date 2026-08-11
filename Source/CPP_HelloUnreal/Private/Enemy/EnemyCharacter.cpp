@@ -62,6 +62,7 @@ void AEnemyCharacter::OnItemDrop()
 		TMap<FName, uint8*> Map = ItemDropTable->GetRowMap();
 		for (auto& pair : Map)
 		{
+			UE_LOG(LogTemp, Log, TEXT("%s 생성 시도"), *pair.Key.ToString());
 			//FItemDropTableRow* Row = reinterpret_cast<FItemDropTableRow*>(pair.Value);
 			//(FItemDropTableRow*)(pair.Value);
 
