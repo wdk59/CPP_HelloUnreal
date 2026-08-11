@@ -49,6 +49,11 @@ protected :
 	int32 Path = 0;
 	//EDirectionType Path = EDirectionType::None;
 
+public :
+
+	// Getter
+	inline float GetCellSize() const { return CellHalfSize * 2; }
+
 protected :
 	
 	// Path 설정에 따라 문이 제대로 열리는지 테스트하기 위한 함수

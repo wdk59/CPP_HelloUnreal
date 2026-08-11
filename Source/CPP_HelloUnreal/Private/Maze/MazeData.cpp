@@ -34,13 +34,14 @@ void FMazeData::MakeMaze(uint8 InWidth, uint8 InHeight, int32 InSeed)
 
 	Cells.SetNum(Width * Height);	// 배열 초기화 (SetNum으로 실제 배열 요소도 생성)
 
+	WillsonAlgorithmExecute();		// 윌슨 알고리즘으로 미로 데이터 생성
 }
 
 void FMazeData::ClearMaze()
 {
 	Width = 0;
 	Height = 0;
-	Cells.Reset();
+	Cells.Empty();
 	
 }
 
@@ -144,12 +145,12 @@ FCellData* FMazeData::GetRandomNeighborCell(const FCellData& InCell)
 	{
 		int32 Index = RandomStream.RandRange(0, DirectionCount - 1);	// 0, 1, 2, 3 중 하나가 랜덤으로 결정
 		NeighborLoc = InCell.GetLocation() + Direction[Index];
-	} while (IsValidLocation(NeighborLoc.X, NeighborLoc.Y));	// 미로 밖을 선택하는 일을 방지
+	} while (!IsValidLocation(NeighborLoc.X, NeighborLoc.Y));	// 미로 밖을 선택하는 일을 방지
 
 	return GetCell(static_cast<uint8>(NeighborLoc.X), static_cast<uint8>(NeighborLoc.Y));
 }
 
-void FMazeData::ShuffleArray(TArray<FCellData*> InOutArray)
+void FMazeData::ShuffleArray(TArray<FCellData*>& InOutArray)
 {
 	for (int i = InOutArray.Num() - 1; i > 0; i--)
 	{

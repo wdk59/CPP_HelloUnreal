@@ -40,7 +40,7 @@ public:
 	inline FIntPoint GetLocation() const { return FIntPoint(X, Y); }
 
 	// 셀에 길을 추가하는 함수
-	inline bool AddPath(EDirectionType InAddedPath) { return Path != InAddedPath; }
+	inline void AddPath(EDirectionType InAddedPath) { Path |= InAddedPath; }
 
 	// 특정 방향이 길인지 확인하는 함수 (길이면 true)
 	inline bool IsPath(EDirectionType InCheck) const { return (Path & InCheck) == InCheck; }
