@@ -21,12 +21,11 @@ public:
 	// 생성된 미로를 제거하는 함수
 	void ClearMaze();
 
-	// 특정 위치의 셀을 리턴하는 함수
-	FCellData* GetCell(uint8 InX, uint8 InY);
-
-private:
+public :
 
 	static constexpr int32 RandomSeed = -1;
+
+private:
 
 	// 미로의 가로 칸(Cell) 수
 	uint8 Width = 0;
@@ -43,6 +42,11 @@ private:
 	static constexpr int DirectionCount = 4;
 	// 이웃 방향의 상대 좌표 (북동남서 순서)
 	static const FIntPoint Direction[DirectionCount];
+
+public :
+
+	// 특정 위치의 셀을 리턴하는 함수
+	FCellData* GetCell(uint8 InX, uint8 InY);
 
 private :
 

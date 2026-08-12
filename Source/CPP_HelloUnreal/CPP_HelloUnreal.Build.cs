@@ -8,8 +8,10 @@ public class CPP_HelloUnreal : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore",
-			"EnhancedInput", "UMG", "Slate", "SlateCore", "Niagara" });
+		PublicDependencyModuleNames.AddRange(new string[] {
+			"Core", "CoreUObject", "Engine", "InputCore",
+			"EnhancedInput", "UMG", "Slate", "SlateCore", "Niagara", "NavigationSystem"
+		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });
 

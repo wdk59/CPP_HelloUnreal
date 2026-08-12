@@ -52,7 +52,9 @@ protected :
 public :
 
 	// Getter
-	inline float GetCellSize() const { return CellHalfSize * 2; }
+
+	// 셀 한 변의 절반 크기 리턴
+	float GetCellHalfSize() const { return CellHalfSize; }
 
 protected :
 	
