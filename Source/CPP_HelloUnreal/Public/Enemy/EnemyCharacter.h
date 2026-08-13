@@ -51,4 +51,7 @@ private :
 
 	void SpawnPickup(UItemDataAsset* ItemDataAsset);
 
+	UFUNCTION()
+	void OnItemSpawned(APickupBase* InSpawned);
+
 };
