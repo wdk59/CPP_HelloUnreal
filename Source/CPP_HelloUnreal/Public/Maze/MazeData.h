@@ -51,7 +51,7 @@ public :
 private :
 
 	// 윌슨 알고리즘 실행 함수
-	void WillsonAlgorithmExecute();
+	void WilsonAlgorithmExecute();
 	
 	// From 셀과 To 셀 사이의 문을 제거하는 함수
 	void ConnectCells(FCellData* InFrom, FCellData* InTo);

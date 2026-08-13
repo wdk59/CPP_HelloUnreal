@@ -34,7 +34,7 @@ void FMazeData::MakeMaze(uint8 InWidth, uint8 InHeight, int32 InSeed)
 
 	Cells.SetNum(Width * Height);	// 배열 초기화 (SetNum으로 실제 배열 요소도 생성)
 
-	WillsonAlgorithmExecute();		// 윌슨 알고리즘으로 미로 데이터 생성
+	WilsonAlgorithmExecute();		// 윌슨 알고리즘으로 미로 데이터 생성
 }
 
 void FMazeData::ClearMaze()
@@ -45,7 +45,7 @@ void FMazeData::ClearMaze()
 	
 }
 
-void FMazeData::WillsonAlgorithmExecute()
+void FMazeData::WilsonAlgorithmExecute()
 {
 	// 기본 초기화
 	TArray<FCellData*> NotInMazeCells;
