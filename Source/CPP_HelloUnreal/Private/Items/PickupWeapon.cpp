@@ -4,6 +4,7 @@
 #include "Items/PickupWeapon.h"
 #include "Weapons/WeaponActor.h"
 #include "Interface/WeaponUserInterface.h"
+
 #include "Components/SphereComponent.h"
 
 APickupWeapon::APickupWeapon()
@@ -34,7 +35,7 @@ void APickupWeapon::InitializePickup(UItemDataAsset* InData)
 void APickupWeapon::OnConstruction(const FTransform& Transform)
 {
 	Super::OnConstruction(Transform);
-	SphereCollision->InitSphereRadius(200.f);
+	//SphereCollision->InitSphereRadius(200.f);
 	
 	InitializePickup(DataAsset);
 
@@ -56,8 +57,8 @@ void APickupWeapon::OnPickup(AActor* InTarget)
 		// 더 이상의 오버랩이 발생하지 않게 하기
 		SphereCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-		PickupElapsedTime = 0.f;
 		PickupStartLocation = Mesh->GetComponentLocation();
+		PickupElapsedTime = 0.f;
 
 		GetWorldTimerManager().SetTimer(
 			PickupEffectTimerHandle,
@@ -83,7 +84,8 @@ void APickupWeapon::OnUpdatePickupEffect()
 	}
 
 	PickupElapsedTime += TimerInterval;
-	float Progress = PickupElapsedTime / PickupEffectDuration;
+	float Div = FMath::Max(PickupEffectDuration, 0.001f);
+	float Progress = PickupElapsedTime / Div;
 
 	// 플레이어한테 가까이 오기 보간
 	float DistanceAlpha = PickupAlphaCurve->GetFloatValue(Progress);

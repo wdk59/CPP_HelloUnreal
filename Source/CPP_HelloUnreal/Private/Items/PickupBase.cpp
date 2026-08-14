@@ -2,11 +2,13 @@
 
 
 #include "Items/PickupBase.h"
-#include "CPP_HelloUnreal/CPP_HelloUnreal.h"
 #include "Components/SphereComponent.h"
 #include "Components/MeshComponent.h"
-#include "Datas/Items/ItemDataAsset.h"
 #include "NiagaraComponent.h"
+#include "Interface/InventoryUserInterface.h"
+#include "Components/InventoryCommandTypes.h"
+#include "Frameworks/Subsystem/PickupFactorySubsystem.h"
+#include "CPP_HelloUnreal/CPP_HelloUnreal.h"
 
 // Sets default values
 APickupBase::APickupBase()
@@ -60,6 +62,39 @@ void APickupBase::OnPickup(AActor* InTarget)
 {
 	UE_LOG(LogTemp, Log, TEXT("%s가 %s을 획득했습니다."), InTarget ? *InTarget->GetName() : TEXT("알 수 없는 대상"), *this->GetName());
 	bIdle = false;
+
+	if (IInventoryUserInterface* Inven = Cast<IInventoryUserInterface>(InTarget))
+	{
+		FInventoryCommand Command = FInventoryCommand::MakeAdd(DataAsset, 1);
+		FInventoryCommandResult Result;
+		if (!Inven->ExecuteInventoryCommand(Command, Result))
+		{
+			UPickupFactorySubsystem* Factory = GetWorld()->GetSubsystem<UPickupFactorySubsystem>();
+			Factory->SpawnPickupAsync(DataAsset, InTarget->GetActorTransform(),
+				FOnPickupSpawned::CreateWeakLambda(
+					this,
+					[this](APickupBase* InSpawned)
+					{
+						UE_LOG(LogTemp, Log, TEXT("%s가 스폰되었습니다."), *InSpawned->GetName());
+						OnFinishPickupEffect();
+					}
+				)
+			);
+		}
+		else
+		{
+			OnFinishPickupEffect();
+		}
+	}
+}
+
+void APickupBase::OnUpdatePickupEffect()
+{
+
+}
+void APickupBase::OnFinishPickupEffect()
+{
+	Destroy();
 }
 
 void APickupBase::OnUpdateUpdownSpin(float InDeltaTime)
@@ -67,6 +102,7 @@ void APickupBase::OnUpdateUpdownSpin(float InDeltaTime)
 	if (!IsCurveAssetReady()) return;
 
 	ElapsedTime += InDeltaTime;
+
 	if (UMeshComponent* PickupMesh = GetMesh())
 	{
 		float Div = FMath::Max(UpDownDuration, 0.001f);
@@ -92,4 +128,3 @@ bool APickupBase::IsCurveAssetReady() const
 {
 	return UpDownCurve && SpinCurve;
 }
-

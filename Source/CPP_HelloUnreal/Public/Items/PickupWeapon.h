@@ -7,8 +7,6 @@
 #include "Datas/Items/WeaponDataAsset.h"
 #include "PickupWeapon.generated.h"
 
-class UNiagaraComponent;
-
 /**
  * 
  */
@@ -17,9 +15,9 @@ class CPP_HELLOUNREAL_API APickupWeapon : public APickupBase
 {
 	GENERATED_BODY()
 
-	APickupWeapon();
-
 public :
+
+	APickupWeapon();
 
 	virtual void InitializePickup(UItemDataAsset* InData) override;
 
@@ -30,6 +28,9 @@ protected :
 	virtual UMeshComponent* GetMesh() const override { return Mesh; };
 
 	virtual void OnPickup(AActor* InTarget) override;
+
+	virtual void OnUpdatePickupEffect() override;
+	virtual void OnFinishPickupEffect() override;
 
 protected :
 
@@ -60,9 +61,6 @@ protected :
 
 private :
 
-	// 이 픽업을 먹었을 때 획득하는 무기 데이터
-	TWeakObjectPtr<UWeaponDataAsset> WeaponData = nullptr;
-
 	// 아이템을 줍는 연출용 타이머 핸들
 	FTimerHandle PickupEffectTimerHandle;
 
@@ -75,15 +73,14 @@ private :
 	// 아이템을 줍는 연출용 타이머의 실행 간격
 	const float TimerInterval = 0.02f;
 
+	// 아이템을 줍는 연출용 시작 위치
 	FVector PickupStartLocation;
 
-protected :
-	
-	virtual void OnUpdatePickupEffect();
-	virtual void OnFinishPickupEffect();
+	// 이 픽업을 먹었을 때 획득하는 무기 데이터
+	TWeakObjectPtr<UWeaponDataAsset> WeaponData = nullptr;
 
 private :
 	
-	virtual bool IsPickupEffectAssetReady() const;
+	bool IsPickupEffectAssetReady() const;
 
 };

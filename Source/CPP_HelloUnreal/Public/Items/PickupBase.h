@@ -74,6 +74,9 @@ protected:
 	// 오버랩 됐을 때 대상에게 효과를 적용하는 함수
 	virtual void OnPickup(AActor* InTarget);
 
+	virtual void OnUpdatePickupEffect();
+	virtual void OnFinishPickupEffect();
+
 	virtual void OnUpdateUpdownSpin(float InDeltaTime);
 
 	virtual UMeshComponent* GetMesh() const;

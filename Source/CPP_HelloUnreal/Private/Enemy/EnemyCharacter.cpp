@@ -58,42 +58,44 @@ float AEnemyCharacter::TakeDamage(float DamageAmount, FDamageEvent const& Damage
 
 void AEnemyCharacter::OnItemDrop()
 {
+	if (!GetWorld())
+		return;
+
 	if (ItemDropTable)
 	{
-		TMap<FName, uint8*> Map = ItemDropTable->GetRowMap();
-		for (auto& pair : Map)
+		//TMap<FName, uint8*> Map = ItemDropTable->GetRowMap();
+		//for (auto& pair : Map)
+		//{
+		//	UE_LOG(LogTemp, Log, TEXT("%s 생성 시도"), *pair.Key.ToString());
+		//	//FItemDropTableRow* Row = reinterpret_cast<FItemDropTableRow*>(pair.Value);
+		//	//(FItemDropTableRow*)(pair.Value);
+		//}
+
+		TArray<FItemDropTableRow*> AllRows;
+		ItemDropTable->GetAllRows(TEXT("AEnemyCharacter::OnItemDrop"), AllRows);
+		for (FItemDropTableRow* Row : AllRows)
 		{
-			UE_LOG(LogTemp, Log, TEXT("%s 생성 시도"), *pair.Key.ToString());
-			//FItemDropTableRow* Row = reinterpret_cast<FItemDropTableRow*>(pair.Value);
-			//(FItemDropTableRow*)(pair.Value);
-
-			TArray<FItemDropTableRow*> AllRows;
-			ItemDropTable->GetAllRows(TEXT("AEnemyCharacter::OnItemDrop"), AllRows);
-			for (FItemDropTableRow* Row : AllRows)
-			{
-				// 필수 데이터 확인
-				if (!Row || !Row->PickupData)
-					continue;	// 행 정보가 잘못됐으면 그 행(아이템) 스킵
+			// 필수 데이터 확인
+			if (!Row || !Row->PickupData)
+				continue;	// 행 정보가 잘못됐으면 그 행(아이템) 스킵
 				
-				// 드랍 확률 체크
-				if (FMath::FRand() > Row->DropRate)
-					continue;	// 드랍 확률따라 행(아이템) 스킵
+			// 드랍 확률 체크
+			if (FMath::FRand() > Row->DropRate)
+				continue;	// 드랍 확률따라 행(아이템) 스킵
 
-				UPickupFactorySubsystem* PickupFactory = GetWorld()->GetSubsystem<UPickupFactorySubsystem>();
-				if (PickupFactory)
-				{
-					//PickupFactory->SpawnPickup(Row->PickupData, GetActorTransform());
-					PickupFactory->SpawnPickupAsync(Row->PickupData, GetActorTransform(),
-						FOnPickupSpawned::CreateWeakLambda(
-							this,
-							[](APickupBase* InSpawned)
-							{
-								UE_LOG(LogTemp, Log, TEXT("%s가 스폰되었습니다."), *InSpawned->GetName());
-							}
-						)
-						);
-
-				}
+			UPickupFactorySubsystem* PickupFactory = GetWorld()->GetSubsystem<UPickupFactorySubsystem>();
+			if (PickupFactory)
+			{
+				//PickupFactory->SpawnPickup(Row->PickupData, GetActorTransform());
+				PickupFactory->SpawnPickupAsync(Row->PickupData, GetActorTransform(),
+					FOnPickupSpawned::CreateWeakLambda(
+						this,
+						[](APickupBase* InSpawned)
+						{
+							UE_LOG(LogTemp, Log, TEXT("%s가 스폰되었습니다."), *InSpawned->GetName());
+						}
+					)
+				);
 			}
 		}
 	}
@@ -115,9 +117,4 @@ void AEnemyCharacter::SpawnPickup(UItemDataAsset* ItemDataAsset)
 		PickupActor->InitializePickup(ItemDataAsset);
 		UE_LOG(LogTemp, Log, TEXT("%s가 드랍되었습니다."), *(ItemDataAsset->DisplayName).ToString());
 	}
-}
-
-void AEnemyCharacter::OnItemSpawned(APickupBase* InSpawned)
-{
-	
 }

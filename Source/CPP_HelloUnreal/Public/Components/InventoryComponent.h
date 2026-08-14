@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "Components/InventoryCommandTypes.h"
 #include "Datas/Items/ItemDataAsset.h"
 #include "InventoryComponent.generated.h"
 
@@ -17,7 +18,7 @@ public :
 
 	// 이 슬로셍 들어있는 아이템의 종류
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Slot")
-	TObjectPtr<UItemDataAsset> ItemData;
+	TObjectPtr<const UItemDataAsset> ItemData;
 
 protected :
 
@@ -44,9 +45,9 @@ public :
 	inline int32 GetRemainingCount() const { return ItemData ? ItemData->MaxStackCount - Count : 0; }
 	
 	// 슬롯에 들어있는 아이템 수
-	inline int32 Getcount() const { return Count; }
+	inline int32 GetCount() const { return Count; }
 	
-	// 슬로셍 아이템 수를 설정하는 함수
+	// 슬롯에 아이템 수를 설정하는 함수
 	inline void SetCount(int32 InCount)
 	{
 		if (ItemData && InCount > 0)
@@ -92,22 +93,18 @@ private :
 	static constexpr int32 InventoryFail = -1;
 
 public :
-	
-	// 인벤토리에 돈을 추가하거나 감소시키는 함수
-	void AddMoney(int32 InIncome);
 
-	// 인벤토리에 아이템을 추가하는 함수
-	void AddItem(UItemDataAsset* InItemData, int32 InCount);
-	
-	// 인벤토리의 특정 슬롯에 들어있는 아이템을 사용하는 함수
-	void UseItem(int32 InIndex);
+	UFUNCTION(BlueprintCallable, Category = "Inventory|Command")
+	bool ExecuteCommand(const FInventoryCommand& Command, FInventoryCommandResult& OutResult);
+
+public :
 
 	// Getter ---------------------------------
 	// 현재 돈을 리턴하는 함수
 	int32 GetMoney() const { return Money; }
 	
 	// 특정 슬롯을 리턴하는 함수
-	FInvenSlot* Getslot(int InSlotIndex);
+	FInvenSlot* GetSlot(int InSlotIndex);
 
 	// 임시 슬롯을 리턴하는 함수
 	FInvenSlot* GetTempSlot();
@@ -115,23 +112,41 @@ public :
 
 protected :
 
-	// 특정 슬롯의 아이템 개수를 업데이트하는 함수
-	void UpdateSlotCount(int32 InSlotIndex, int32 InDeltaCount);
+	// 인벤토리에 돈을 추가하거나 감소시키는 함수
+	UFUNCTION(BlueprintCallable)
+	void AddMoney(int32 InIncome);
+
+	// 인벤토리에 아이템을 추가하는 함수
+	UFUNCTION(BlueprintCallable)
+	int32 AddItem(const UItemDataAsset* InItemData, int32 InCount);
+
+	// 인벤토리의 특정 슬롯에 들어있는 아이템을 사용하는 함수
+	void UseItem(int32 InIndex);
 
 	// 특정 슬롯에 아이템과 개수를 설정하는 함수
-	void SetItem(int32 InslotIndex, UItemDataAsset* InItemData, int32 InCount);
+	void SetSlot(int32 InslotIndex, const UItemDataAsset* InItemData, int32 InCount);
 
+	// 특정 슬롯의 아이템 개수를 업데이트하는 함수
+	void UpdateSlotCount(int32 InSlotIndex, int32 InDeltaCount);
+	
 	// 특정 슬롯을 비우는 함수
 	void ClearSlot(int32 InSlotIndex);
 
 	// 인덱스가 적절한 범위인지 확인하는 함수
-	inline bool IsValidIndex(int32 InSlotIndex) const { return InSlotIndex < InventorySize && InSlotIndex > 0; }
+	inline bool IsValidIndex(int32 InSlotIndex) const
+	{
+		return (InSlotIndex < InventorySize) && (InSlotIndex >= 0);
+	}
+
+	// Add 커맨드 처리용 함수
+	bool HandleAddCommand(const UItemDataAsset* InItemData, int32 InCount, FInventoryCommandResult& OutResult);
 
 private :
 
-	// 같은 종류의 아이템이 있는 슬롯을 찾는 함수
+	// 같은 종류의 아이템이 있는 슬롯을 찾는 함수 (남은 스택이 있어야 함)
 	int32 FindSlotWithItem(const UItemDataAsset* InItemData, int32 InStartIndex = 0);
 
+	// 비어있는 슬롯을 찾는 함수
 	int32 FindEmptySlot();
 
 };

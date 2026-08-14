@@ -2,9 +2,10 @@
 
 
 #include "Player/ActionCharacter.h"
-#include "Datas/Items/WeaponDataAsset.h"
 #include "Components/StatComponent.h"
 #include "Components/WeaponComponent.h"
+#include "Components/InventoryComponent.h"
+#include "Datas/Items/WeaponDataAsset.h"
 
 #include "EnhancedInputComponent.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -27,6 +28,7 @@ AActionCharacter::AActionCharacter()
 	
 	StatComponent = CreateDefaultSubobject<UStatComponent>(TEXT("Stat"));
 	WeaponComponent = CreateDefaultSubobject<UWeaponComponent>(TEXT("Weapon"));
+	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("Inventory"));
 
 	bUseControllerRotationYaw = false;	// 컨트롤러 움직일 때 폰이 같이 회전되는 것 방지
 	GetCharacterMovement()->bOrientRotationToMovement = true;	// 캐릭터 이동 방향으로 바라보게 만들기
@@ -42,6 +44,11 @@ UWeaponComponent* AActionCharacter::GetWeaponComponent() const
 	return WeaponComponent;
 }
 
+UInventoryComponent* AActionCharacter::GetInventoryComponent() const
+{
+	return InventoryComponent;
+}
+
 void AActionCharacter::EquipWeapon_Implementation(UWeaponDataAsset* InWeaponData)
 {
 	if (GetWeaponComponent())
@@ -49,6 +56,16 @@ void AActionCharacter::EquipWeapon_Implementation(UWeaponDataAsset* InWeaponData
 		WeaponComponent->EquipWeapon(InWeaponData);
 	}
 }
+bool AActionCharacter::ExecuteInventoryCommand(const FInventoryCommand& InCommand, FInventoryCommandResult& OutResult)
+{
+	if (GetInventoryComponent())
+	{
+		return InventoryComponent->ExecuteCommand(InCommand, OutResult);
+	}
+
+	return false;
+}
+
 // 여기서부터
 // Called when the game starts or when spawned
 void AActionCharacter::BeginPlay()

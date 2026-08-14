@@ -8,6 +8,8 @@
 #include "EnemyCharacter.generated.h"
 
 class UStatComponent;
+class APickupWeapon;
+class APickupMics;
 class UItemDataAsset;
 
 UCLASS()
@@ -50,8 +52,5 @@ protected :
 private :
 
 	void SpawnPickup(UItemDataAsset* ItemDataAsset);
-
-	UFUNCTION()
-	void OnItemSpawned(APickupBase* InSpawned);
 
 };
