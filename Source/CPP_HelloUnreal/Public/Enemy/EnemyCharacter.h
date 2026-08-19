@@ -51,6 +51,6 @@ protected :
 
 private :
 
-	void SpawnPickup(UItemDataAsset* ItemDataAsset);
+	void SpawnPickup(const UItemDataAsset* ItemDataAsset);
 
 };

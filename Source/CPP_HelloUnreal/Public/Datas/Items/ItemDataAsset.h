@@ -27,6 +27,10 @@ public :
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Base|Data")
 	FText Description;
 
+	// 아이템 아이콘
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Base|Data")
+	TSoftObjectPtr<UTexture2D> Icon = nullptr;
+
 	// 아이템 가격
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Base|Data")
 	int32 Price = 1;
@@ -35,13 +39,13 @@ public :
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Base|Data")
 	int32 MaxStackCount = 1;
 
-	// 아이템 스폰할 위치 Offset
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Base|Spawn")
-	FVector SpawnLocationOffset = FVector::ZeroVector;
-
 	// 스폰할 아이템 클래스
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Base|Spawn")
 	TSoftClassPtr<APickupBase> PickupClass;
+
+	// 아이템 스폰할 위치 Offset
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Base|Spawn")
+	FVector SpawnLocationOffset = FVector::ZeroVector;
 
 public:
 	virtual TSharedPtr<FStreamableHandle> RequestDataLoad(FStreamableDelegate InDelegate) const;

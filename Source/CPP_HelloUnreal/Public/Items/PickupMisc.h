@@ -20,11 +20,9 @@ public:
 
 	APickupMisc();
 
-	virtual void InitializePickup(UItemDataAsset* InData) override;
+	virtual void InitializePickup(const UItemDataAsset* InData) override;
 
 protected :
-
-	virtual void OnConstruction(const FTransform& Transform) override;
 
 	virtual UMeshComponent* GetMesh() const override { return Mesh; };
 
@@ -35,6 +33,6 @@ protected:
 
 private :
 
-	TWeakObjectPtr<UMiscItemDataAsset> MiscData;
+	TWeakObjectPtr<const UMiscItemDataAsset> MiscData;
 
 };

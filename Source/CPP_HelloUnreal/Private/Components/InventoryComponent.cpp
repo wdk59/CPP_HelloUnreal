@@ -2,6 +2,7 @@
 
 
 #include "Components/InventoryComponent.h"
+#include "Frameworks/Subsystem/PickupFactorySubsystem.h"
 
 // Sets default values for this component's properties
 UInventoryComponent::UInventoryComponent()
@@ -37,14 +38,18 @@ bool UInventoryComponent::ExecuteCommand(const FInventoryCommand& Command, FInve
 	{
 	case EInventoryCommandType::Add:
 		HandleAddCommand(Command.ItemData, Command.Count, OutResult);
-		if (OutResult.bSuccess)
-		{
-			UE_LOG(LogTemp, Log, TEXT("[%s] 추가가 성공적으로 완료되었습니다."), *(Command.ItemData->DisplayName.ToString()));
-		}
-		else
-		{
-			UE_LOG(LogTemp, Log, TEXT("%d개의 아이템이 남았습니다."), OutResult.RemainingCount);
-		}
+		break;
+	case EInventoryCommandType::Move:
+		HandleMoveCommand(Command.SourceIndex, Command.TargetIndex, OutResult);
+		break;
+	case EInventoryCommandType::Drop:
+		HandleDropCommand(Command.SourceIndex, Command.DropPosition, OutResult);
+		break;
+	case EInventoryCommandType::Use:
+		HandleUseCommand(Command.SourceIndex, OutResult);
+		break;
+	case EInventoryCommandType::Money:
+		HandleMoneyCommand(Command.Count, OutResult);
 		break;
 	default:
 		UE_LOG(LogTemp, Warning, TEXT("알 수 없는 커맨드입니다."));
@@ -57,6 +62,7 @@ bool UInventoryComponent::ExecuteCommand(const FInventoryCommand& Command, FInve
 void UInventoryComponent::AddMoney(int32 InIncome)
 {
 	Money += InIncome;
+	OnMoneyChanged.Broadcast(Money);	// 돈의 변경을 알림
 }
 
 int32 UInventoryComponent::AddItem(const UItemDataAsset* InItemData, int32 InCount)
@@ -76,7 +82,7 @@ int32 UInventoryComponent::AddItem(const UItemDataAsset* InItemData, int32 InCou
 	int32 RemainingCount = InCount;
 
 	int32 StartIndex = 0;
-	// 같은 종류의 아이템이 있는 칸을 찾아 최대한 채우기
+	// 같은 종류의 아이템이 있는 슬롯을 찾아 최대한 채우기
 	while (RemainingCount > 0)	// 남는 게 있으면 계속 반복
 	{
 		// 같은 종류의 아이템이 들어있는 슬롯을 찾아 추가하기
@@ -105,7 +111,7 @@ int32 UInventoryComponent::AddItem(const UItemDataAsset* InItemData, int32 InCou
 		// 빈 슬롯을 찾은 경우
 		FInvenSlot& Slot = Slots[EmptyIndex];
 		int32 AmountToAdd = FMath::Min(InItemData->MaxStackCount, RemainingCount);
-		SetSlot(EmptyIndex, InItemData, AmountToAdd);	// FoundIndex 슬롯에 채울 수 있는 만큼 채우기
+		SetSlot(EmptyIndex, InItemData, AmountToAdd);	// EmptyIndex 슬롯에 아이템 설정
 
 		RemainingCount -= AmountToAdd;	// 남은 개수 갱신
 	}
@@ -145,7 +151,23 @@ void UInventoryComponent::SetSlot(int32 InSlotIndex, const UItemDataAsset* InIte
 	Slot.ItemData = InItemData;
 	Slot.SetCount(InCount);
 
-	// 델리게이트 전담 함수
+	if (!InItemData->IsLoaded())
+	{
+		InItemData->RequestDataLoad(
+			FStreamableDelegate::CreateWeakLambda(
+				this,
+				[this, InSlotIndex]()
+				{
+					// 리프레시용으로 변경 브로드 캐스트 날리기
+					// UE_LOG(LogTemp, Log, TEXT("SetSlot: 비동기 로딩 완료"));
+					OnSlotChanged.ExecuteIfBound(InSlotIndex);
+				}
+			)
+		);
+	}
+
+	// 델리게이트 전담 함수 (다른 인벤토리 슬롯 변경 함수들은 최종적으로 이 함수를 호출)
+	OnSlotChanged.ExecuteIfBound(InSlotIndex);
 }
 
 void UInventoryComponent::UpdateSlotCount(int32 InSlotIndex, int32 InDeltaCount)
@@ -172,7 +194,7 @@ bool UInventoryComponent::HandleAddCommand(const UItemDataAsset* InItemData, int
 {
 	int32 RemainingCount = AddItem(InItemData, InCount);
 
-	// RemainingCount가 0이면 인벤토리에 잘 들어감. 0을 초과하면 그만큼은 인벤토리에 못 들어갔다는 의미
+	// RemainingCount가 0이면 인벤토리에 잘 들어갔음, 0을 초과하면 그만큼은 인벤토리에 못 들어갔다는 의미
 	if (RemainingCount > 0)
 	{
 		OutResult.bSuccess = false;
@@ -183,6 +205,141 @@ bool UInventoryComponent::HandleAddCommand(const UItemDataAsset* InItemData, int
 		OutResult.bSuccess = true;
 		OutResult.RemainingCount = 0;
 	}
+
+	if (OutResult.bSuccess)
+	{
+		UE_LOG(LogTemp, Log, TEXT("[%s] 추가가 성공적으로 완료되었습니다."), *(InItemData->DisplayName.ToString()));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Log, TEXT("%d개의 아이템이 남았습니다."), OutResult.RemainingCount);
+	}
+
+	return OutResult.bSuccess;
+}
+
+bool UInventoryComponent::HandleMoveCommand(int32 InSourceIndex, int32 InTargetIndex, FInventoryCommandResult& OutResult)
+{
+	if (!IsValidIndex(InSourceIndex) || !IsValidIndex(InTargetIndex))
+	{
+		OutResult.bSuccess = false;
+		return false;
+	}
+
+	if (InSourceIndex == InTargetIndex)
+	{
+		OutResult.bSuccess = true;
+		return true;
+	}
+
+	FInvenSlot& SourceSlot = Slots[InSourceIndex];
+	FInvenSlot& TargetSlot = Slots[InTargetIndex];
+
+	// 소스가 비어있으면 실패: 처리 안 함
+	if (SourceSlot.IsEmpty())
+	{
+		OutResult.bSuccess = false;
+		return false;
+	}
+
+	if (TargetSlot.IsEmpty())
+	{
+		// 대상 슬롯이 비어 있다 => 그대로 이동 처리
+		SetSlot(InTargetIndex, SourceSlot.ItemData, SourceSlot.GetCount());
+		ClearSlot(InSourceIndex);
+		OutResult.bSuccess = true;
+	}
+	else if (TargetSlot.ItemData == SourceSlot.ItemData)
+	{
+		// 이동을 시키는데 같은 아이템이 들어 있다. => 병합 처리
+		int32 AmountToAdd = FMath::Min(TargetSlot.GetRemainingCount(), SourceSlot.GetCount());
+		if (AmountToAdd > 0)
+		{
+			UpdateSlotCount(InTargetIndex, AmountToAdd);
+			UpdateSlotCount(InSourceIndex, -AmountToAdd);
+			OutResult.bSuccess = true;
+		}
+		else
+		{
+			OutResult.bSuccess = false;
+		}
+	}
+	else
+	{
+		// 소스와 타겟이 서로 다른 아이템이다 => 슬롯 스왑
+		const UItemDataAsset* SourceItem = SourceSlot.ItemData;
+		int32 SourceCount = SourceSlot.GetCount();
+		const UItemDataAsset* TargetItem = TargetSlot.ItemData;
+		int32 TargetCount = TargetSlot.GetCount();
+
+		SetSlot(InSourceIndex, TargetItem, TargetCount);
+		SetSlot(InTargetIndex, SourceItem, SourceCount);
+		OutResult.bSuccess = true;
+	}
+
+	return OutResult.bSuccess;
+}
+
+bool UInventoryComponent::HandleDropCommand(int32 InSlotIndex, const FVector& InDropLocation, FInventoryCommandResult& OutResult)
+{
+	OutResult.bSuccess = false;
+
+	if (!IsValidIndex(InSlotIndex))
+	{
+		return OutResult.bSuccess;
+	}
+
+	FInvenSlot& Slot = Slots[InSlotIndex];
+
+	// 슬롯이 비어 있으면 실패: 처리 안 함
+	if (Slot.IsEmpty())
+	{
+		return OutResult.bSuccess;
+	}
+
+	UWorld* World = GetWorld();
+	const UItemDataAsset* ItemData = Slot.ItemData;
+	if (World && ItemData)
+	{
+		if (UPickupFactorySubsystem* Factory = World->GetSubsystem<UPickupFactorySubsystem>())
+		{
+			for (int32 i = 0; i < Slot.GetCount(); i++)
+			{
+				FVector SpawnLocation(FMath::RandPointInCircle(100.f), 0.f);
+				SpawnLocation += InDropLocation;
+
+				FTransform SpawnTransform(FRotator::ZeroRotator, SpawnLocation);
+				Factory->SpawnPickupAsync(ItemData, SpawnTransform, FOnPickupSpawned());
+			}
+			Slot.Clear();
+			OutResult.bSuccess = true;
+		}
+	}
+
+	return OutResult.bSuccess;
+}
+
+bool UInventoryComponent::HandleUseCommand(int32 InSlotIndex, FInventoryCommandResult& OutResult)
+{
+	OutResult.bSuccess = false;
+
+	if (!IsValidIndex(InSlotIndex))
+	{
+		return OutResult.bSuccess;
+	}
+
+	UseItem(InSlotIndex);
+	OutResult.bSuccess = true;
+
+	return OutResult.bSuccess;
+}
+
+bool UInventoryComponent::HandleMoneyCommand(int32 InMoneyDiff, FInventoryCommandResult& OutResult)
+{
+	OutResult.bSuccess = false;
+
+	AddMoney(InMoneyDiff);
+	OutResult.bSuccess = true;
 
 	return OutResult.bSuccess;
 }

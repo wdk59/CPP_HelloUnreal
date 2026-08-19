@@ -14,114 +14,17 @@ APickupWeapon::APickupWeapon()
 	Mesh->SetCollisionProfileName("NoCollision");
 }
 
-void APickupWeapon::InitializePickup(UItemDataAsset* InData)
+void APickupWeapon::InitializePickup(const UItemDataAsset* InData)
 {
 	Super::InitializePickup(InData);
 
 	if (DataAsset)
 	{
-		WeaponData = Cast<UWeaponDataAsset>(DataAsset);
+		WeaponData = Cast<const UWeaponDataAsset>(DataAsset);
 		if (USkeletalMesh* MeshData = WeaponData->Mesh.LoadSynchronous())
 		{
 			Mesh->SetSkeletalMesh(MeshData);
-			Mesh->SetRelativeLocation(MeshBaseLocation + WeaponData->AttachLocationOffset);
+			Mesh->SetRelativeLocation(MeshBaseLocation + WeaponData->SpawnLocationOffset);
 		}
-
 	}
-}
-
-// UPROPERTY 멤버가 바뀌거나 새로 생성되거나 할 때 실행: 블루프린트에서 메시 바뀌는 거 확인 가능
-// PostInitializeComponents 이벤트도 나쁘진 않음. 하지만 블프에서 보려면 OnConstruction이 굿. 자세한 건 AActor 주석 참고.
-void APickupWeapon::OnConstruction(const FTransform& Transform)
-{
-	Super::OnConstruction(Transform);
-	//SphereCollision->InitSphereRadius(200.f);
-	
-	InitializePickup(DataAsset);
-
-}
-
-void APickupWeapon::OnPickup(AActor* InTarget)
-{
-
-	if (GetWorldTimerManager().IsTimerActive(PickupEffectTimerHandle))	return;	// 타이머가 이미 작동 중이면 종료 (중복 실행 방지용)
-
-	Super::OnPickup(InTarget);
-
-	TargetActor = InTarget;
-
-	// 연출
-
-	if (IsPickupEffectAssetReady())
-	{
-		// 더 이상의 오버랩이 발생하지 않게 하기
-		SphereCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-
-		PickupStartLocation = Mesh->GetComponentLocation();
-		PickupElapsedTime = 0.f;
-
-		GetWorldTimerManager().SetTimer(
-			PickupEffectTimerHandle,
-			this,
-			&APickupWeapon::OnUpdatePickupEffect,
-			TimerInterval,
-			true
-		);
-	}
-	else
-	{
-		OnFinishPickupEffect();
-	}
-
-}
-
-void APickupWeapon::OnUpdatePickupEffect()
-{
-	if (!TargetActor.IsValid())
-	{
-		OnFinishPickupEffect();
-		return;
-	}
-
-	PickupElapsedTime += TimerInterval;
-	float Div = FMath::Max(PickupEffectDuration, 0.001f);
-	float Progress = PickupElapsedTime / Div;
-
-	// 플레이어한테 가까이 오기 보간
-	float DistanceAlpha = PickupAlphaCurve->GetFloatValue(Progress);
-	FVector Goal = TargetActor.Get()->GetActorLocation();
-	FVector NewLocation = FMath::Lerp(PickupStartLocation, Goal, DistanceAlpha);
-
-	// 높이 조정
-	float HeightOffset = PickupHeightCurve->GetFloatValue(Progress) * PickupEffectHeight;
-	NewLocation.Z += HeightOffset;
-
-	Mesh->SetWorldLocation(NewLocation);
-
-	float Scale = PickupScaleCurve->GetFloatValue(Progress);
-	Mesh->SetRelativeScale3D(FVector(Scale));
-
-	if (Progress >= 1.f)
-	{
-		OnFinishPickupEffect();
-	}
-}
-
-void APickupWeapon::OnFinishPickupEffect()
-{
-	// 연출이 완전히 종료된 후 실제 장착 실행
-
-	GetWorldTimerManager().ClearTimer(PickupEffectTimerHandle);
-
-	if (TargetActor.IsValid() && WeaponData.IsValid())
-	{
-		IWeaponUserInterface::Execute_EquipWeapon(TargetActor.Get(), WeaponData.Get());
-	}
-
-	Destroy();
-}
-
-bool APickupWeapon::IsPickupEffectAssetReady() const
-{
-	return PickupAlphaCurve && PickupHeightCurve && PickupScaleCurve;
 }

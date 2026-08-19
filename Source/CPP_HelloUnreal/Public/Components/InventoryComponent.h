@@ -8,6 +8,9 @@
 #include "Datas/Items/ItemDataAsset.h"
 #include "InventoryComponent.generated.h"
 
+DECLARE_DELEGATE_OneParam(FOnInventorySlotChanged, int32)
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnInventoryMoneyChanged, int32);
+
 
 USTRUCT(BlueprintType)
 struct FInvenSlot
@@ -77,6 +80,14 @@ protected:
 	// 사용 안 함. Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
+public :
+
+	// 슬롯에 변화가 생겼을 때 발동할 델리게이트 (싱글캐스트)
+	FOnInventorySlotChanged OnSlotChanged;
+
+	// 돈에 변화가 생겼을 때 발동할 델리게이트 (멀티캐스트)
+	FOnInventoryMoneyChanged OnMoneyChanged;
+
 protected :
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Inventory|Money")
 	int32 Money = 0;
@@ -94,12 +105,13 @@ private :
 
 public :
 
+	// 커맨드 실행용 함수
 	UFUNCTION(BlueprintCallable, Category = "Inventory|Command")
 	bool ExecuteCommand(const FInventoryCommand& Command, FInventoryCommandResult& OutResult);
 
 public :
 
-	// Getter ---------------------------------
+	// Getter --------------------------------------------------
 	// 현재 돈을 리턴하는 함수
 	int32 GetMoney() const { return Money; }
 	
@@ -108,7 +120,9 @@ public :
 
 	// 임시 슬롯을 리턴하는 함수
 	FInvenSlot* GetTempSlot();
-	// ----------------------------------------
+
+	int32 GetSize() const { return InventorySize; }
+	// ---------------------------------------------------------
 
 protected :
 
@@ -138,8 +152,13 @@ protected :
 		return (InSlotIndex < InventorySize) && (InSlotIndex >= 0);
 	}
 
-	// Add 커맨드 처리용 함수
+	// 커맨드 핸들링 함수들 ----------------------------------------------------------------------------------------------
 	bool HandleAddCommand(const UItemDataAsset* InItemData, int32 InCount, FInventoryCommandResult& OutResult);
+	bool HandleMoveCommand(int32 InSourceIndex, int32 InTargetIndex, FInventoryCommandResult& OutResult);
+	bool HandleDropCommand(int32 InSlotIndex, const FVector& InDropLocation, FInventoryCommandResult& OutResult);
+	bool HandleUseCommand(int32 InSlotIndex, FInventoryCommandResult& OutResult);
+	bool HandleMoneyCommand(int32 InMoneyDiff, FInventoryCommandResult& OutResult);
+	// -------------------------------------------------------------------------------------------------------------------
 
 private :
 

@@ -19,68 +19,18 @@ public :
 
 	APickupWeapon();
 
-	virtual void InitializePickup(UItemDataAsset* InData) override;
+	virtual void InitializePickup(const UItemDataAsset* InData) override;
 
 protected :
-
-	virtual void OnConstruction(const FTransform& Transform) override;
 
 	virtual UMeshComponent* GetMesh() const override { return Mesh; };
-
-	virtual void OnPickup(AActor* InTarget) override;
-
-	virtual void OnUpdatePickupEffect() override;
-	virtual void OnFinishPickupEffect() override;
-
-protected :
-
-	// 아이템을 줍는 연출의 진행 상황용 커브
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Effect|Pickup")
-	TObjectPtr<UCurveFloat> PickupAlphaCurve = nullptr;
-
-	// 아이템을 줍는 연출 중 위아래로 움직임을 위한 커브
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Effect|Pickup")
-	TObjectPtr<UCurveFloat> PickupHeightCurve = nullptr;
-
-	// 아이템을 줍는 연출 중 크기 변경을 위한 커브
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Effect|Pickup")
-	TObjectPtr<UCurveFloat> PickupScaleCurve = nullptr;
-
-	// 아이템을 줍는 연출의 전체 진행 시간
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Effect|Pickup")
-	float PickupEffectDuration = 0.5f;
-
-	// PickupHeight로 인해 올라가는 높이
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Effect|Pickup")
-	float PickupEffectHeight = 50.f;
 
 protected :
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TObjectPtr<USkeletalMeshComponent> Mesh = nullptr;
 
-private :
-
-	// 아이템을 줍는 연출용 타이머 핸들
-	FTimerHandle PickupEffectTimerHandle;
-
-	// 아이템을 줍는 대상
-	TWeakObjectPtr<AActor> TargetActor = nullptr;
-
-	// 아이템을 줍는 연출이 진행된 시간
-	float PickupElapsedTime = 0.f;
-
-	// 아이템을 줍는 연출용 타이머의 실행 간격
-	const float TimerInterval = 0.02f;
-
-	// 아이템을 줍는 연출용 시작 위치
-	FVector PickupStartLocation;
-
 	// 이 픽업을 먹었을 때 획득하는 무기 데이터
-	TWeakObjectPtr<UWeaponDataAsset> WeaponData = nullptr;
-
-private :
-	
-	bool IsPickupEffectAssetReady() const;
+	TWeakObjectPtr<const UWeaponDataAsset> WeaponData = nullptr;
 
 };
