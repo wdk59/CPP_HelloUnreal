@@ -32,6 +32,24 @@ void AActionPlayerController::SetupInputComponent()
 	}
 }
 
+void AActionPlayerController::OnInventoryOpenClose(bool bInventoryOpen)
+{
+	// FInputModeGameOnly;	// 기본 상태
+	// FInputModeUIOnly;	// 
+	// FInputModeGameAndUI;
+
+	if (bInventoryOpen)
+	{
+		FInputModeGameOnly InputModeGame;
+		SetInputMode(InputModeGame);
+	}
+	else
+	{
+		FInputModeUIOnly InputModeUI;
+		SetInputMode(InputModeUI);
+	}
+}
+
 void AActionPlayerController::OnLookInput(const FInputActionValue& InValue)
 {
 	FVector2D LookAxis = InValue.Get<FVector2D>();

@@ -20,6 +20,7 @@ class CPP_HELLOUNREAL_API AActionPlayerController : public APlayerController
 	GENERATED_BODY()
 
 protected :
+
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
 
@@ -39,6 +40,10 @@ protected :
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float ViewPitchMin = -40.f;
+
+public :
+
+	void OnInventoryOpenClose(bool bInventoryOpen);
 
 protected :
 	void OnLookInput(const FInputActionValue& InValue);

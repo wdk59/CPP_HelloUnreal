@@ -157,6 +157,7 @@ protected :
 	bool HandleMoveCommand(int32 InSourceIndex, int32 InTargetIndex, FInventoryCommandResult& OutResult);
 	bool HandleDropCommand(int32 InSlotIndex, const FVector& InDropLocation, FInventoryCommandResult& OutResult);
 	bool HandleUseCommand(int32 InSlotIndex, FInventoryCommandResult& OutResult);
+	bool HandleClearCommand(int32 InSlotIndex, FInventoryCommandResult& OutResult);
 	bool HandleMoneyCommand(int32 InMoneyDiff, FInventoryCommandResult& OutResult);
 	// -------------------------------------------------------------------------------------------------------------------
 

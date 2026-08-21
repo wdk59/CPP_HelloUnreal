@@ -53,7 +53,7 @@ void APickupBase::BeginPlay()
 		[this]()
 		{
 			UE_LOG(LogTemp, Log, TEXT("픽업을 획득할 수 있습니다."));
-			OnActorBeginOverlap.AddDynamic(this, &APickupBase::OnBeginOVerlap);
+			OnActorBeginOverlap.AddDynamic(this, &APickupBase::OnBeginOverlap);
 		},
 		PickupDelayTime,
 		false
